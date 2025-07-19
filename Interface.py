@@ -2,7 +2,7 @@ from da_console import console
 from LLAMA_Worker import Llama_Worker
 import os
 import sys
-
+import time
 class Main_Interface():
     def __init__(self):
                 os.system('clear')
@@ -24,6 +24,9 @@ class Main_Interface():
     def run(self):
         while True:
                query = input()
-               if query == "\\bye":
+               if query == "bye":
                       console.print("bye bye!",style="green blink")
                       sys.exit(1)
+               else:
+                    with console.status("Monkeying around...", spinner="dots"):
+                           time.sleep(3)
