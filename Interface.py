@@ -20,13 +20,22 @@ class Main_Interface():
                                                         
         """, justify="center", style="#fcc200")
                 console.rule("", style="#fcc200")
-
+                self.convo_history = [{"role": "system", "content": "You are a helpful AI assisant named APOLLO. You refer to the user as Sir Cotterman.\n                          "}]
     def run(self):
+        console.print("Input your prompt then press enter. Type /quit to leave.")
         while True:
-               query = input()
-               if query == "bye":
-                      console.print("bye bye!",style="green blink")
+               query = input("\nUser: ")
+               if query == "/quit":
+                      console.print("bye bye!",style="green")
                       sys.exit(1)
                else:
-                    with console.status("Monkeying around...", spinner="dots"):
-                           time.sleep(3)
+                     self.convo_history.append({"role":"user","content": query})
+                     Llama = Llama_Worker(model_path="/home/smartfella/programming_junk/CLI_APOLLO/Models/capybarahermes-2.5-mistral-7b.Q2_K.gguf",
+                                          messages=self.convo_history,
+                                          threads=8,
+                                          context=1024, #! Make sure to make function to always grab the max context as context is the thing fucking me here
+                                          gpu_layers=0
+                                          )
+                     with console.status("Generating Response...", spinner="dots") as status:
+                            response = Llama.generate_response(status)
+                     self.convo_history.append({"role":"assistant","content": response})
