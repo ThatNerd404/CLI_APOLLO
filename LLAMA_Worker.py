@@ -3,7 +3,7 @@ from da_console import console
 
 
 class Llama_Worker():
-    def __init__(self,model_path,messages,threads=6,context=0,gpu_layers=0):
+    def __init__(self,model_path,messages,threads=6,context=2048,gpu_layers=0):
         self.model_path = model_path
         self.messages = messages
         self.threads = threads
@@ -41,4 +41,4 @@ class Llama_Worker():
         except Exception as e:
             console.print(f"Error Occured:{e}", style="red bold")
         except KeyboardInterrupt:
-            console.print("Request cancelled.")
+            console.print("\nRequest cancelled.", style="red bold")

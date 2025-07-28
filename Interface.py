@@ -33,7 +33,7 @@ class Main_Interface():
                      Llama = Llama_Worker(model_path="/home/smartfella/programming_junk/CLI_APOLLO/Models/capybarahermes-2.5-mistral-7b.Q2_K.gguf",
                                           messages=self.convo_history,
                                           threads=8,
-                                          context=1024, #! Make sure to make function to always grab the max context as context is the thing fucking me here
+                                          context=2048,
                                           gpu_layers=0
                                           )
                      with console.status("Generating Response...", spinner="dots") as status:
