@@ -1,4 +1,3 @@
-from LLAMA_Worker import Llama_Worker
 from Interface import Main_Interface
 import sys
 

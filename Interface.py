@@ -58,7 +58,7 @@ class Main_Interface():
                      elif query == "/help":
                             console.print("Figure it out bonehead!")
                      
-                     elif query == "reset":
+                     elif query == "/reset":
                            self.logger.info("reset command has been used")
                            self.convo_history = [{"role": "system", "content": "You are a helpful AI assisant named APOLLO. You refer to the user as Sir Cotterman.\n                          "}]
                      
