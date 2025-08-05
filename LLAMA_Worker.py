@@ -18,6 +18,7 @@ def suppress_stderr():
 
 class Llama_Worker():
     def __init__(self,model_path,messages,threads=6,context=2048,gpu_layers=0):
+        """Initialization of LLAMA"""
         self.model_path = model_path
         self.messages = messages
         self.threads = threads

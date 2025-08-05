@@ -27,8 +27,8 @@ class Main_Interface():
                 # Setup logger and rotating file handler
                 self.logger = logging.getLogger("logger")
                 self.logger.setLevel(logging.DEBUG)
-                handler = RotatingFileHandler(os.path.join(
-                'Logs', 'log.log'), maxBytes=100000, backupCount=5, encoding="utf-8")
+                handler = RotatingFileHandler(
+                "/home/smartfella/programming_junk/CLI_APOLLO/Logs/log.log", maxBytes=100000, backupCount=5, encoding="utf-8")
                 formatter = logging.Formatter(
                 '%(asctime)s - %(levelname)s - %(message)s',"%Y-%m-%d %H:%M:%S")
                 handler.setFormatter(formatter)
@@ -56,16 +56,16 @@ class Main_Interface():
                                    console.print("\nInvalid Input! Try Y or N!")
                                
                      elif query == "/help":
-                            console.print("Figure it out bonehead!")
+                    console.rule("HELP", style="#fcc200")
                      
                      elif query == "/reset":
                            self.logger.info("reset command has been used")
                            self.convo_history = [{"role": "system", "content": "You are a helpful AI assisant named APOLLO. You refer to the user as Sir Cotterman.\n                          "}]
-                     
+                           console.print("Conversation history reset.", style="green bold")
                      else:
                             self.logger.info("Response generation has begun")
                             self.convo_history.append({"role":"user","content": query})
-                            Llama = Llama_Worker(model_path=os.path.join("Models","capybarahermes-2.5-mistral-7b.Q2_K.gguf"),
+                            Llama = Llama_Worker(model_path="/home/smartfella/programming_junk/CLI_APOLLO/Models/capybarahermes-2.5-mistral-7b.Q2_K.gguf",
                                                  messages=self.convo_history,
                                                  threads=8,
                                                  context=2048,
