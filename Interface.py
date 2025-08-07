@@ -45,9 +45,10 @@ class Main_Interface():
                             self.logger.info("quit command has been used")
                             
                             while True:
-                                confirm = input("\nAre you sure you would like to quit? Y or N?\nUser: ")
+                                console.print("Are you sure you would like to quit? Y or N?", style="bold red")
+                                confirm = input("User: ")
                                 if confirm.upper() == "Y":
-                                   console.print("Bye Bye!")
+                                   
                                    sys.exit(1)
                                 elif confirm.upper() == "N":
                                    break
@@ -56,8 +57,12 @@ class Main_Interface():
                                    console.print("\nInvalid Input! Try Y or N!")
                                
                      elif query == "/help":
-                    console.rule("HELP", style="#fcc200")
-                     
+                         console.rule("HELP", style="#fcc200 bold")
+                         console.print("""
+/help: brings up this dialog.
+/quit: quits the application.
+/reset: resets the conversation history.""", style="blue")
+                                   
                      elif query == "/reset":
                            self.logger.info("reset command has been used")
                            self.convo_history = [{"role": "system", "content": "You are a helpful AI assisant named APOLLO. You refer to the user as Sir Cotterman.\n                          "}]
