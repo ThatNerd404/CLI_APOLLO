@@ -4,6 +4,12 @@ from logging.handlers import RotatingFileHandler
 import os
 import logging
 import sys 
+#TODO add new command to load files into apollo with the /load filename.file maybe use the find command somehow?
+#TODO add flag in command to specify which model to use 
+#TODO add command to save a response with /save 
+#TODO add a command to set timers to help with productivity and stuff
+#TODO add a flag for doing a voice chat mode 
+
 
 class Main_Interface():
     def __init__(self):
@@ -35,7 +41,7 @@ class Main_Interface():
                 self.logger.addHandler(handler)
 
                 self.logger.debug("Finished Initialization")
-              
+
     def run(self):
         console.print("Input your prompt then press enter. Type /quit to leave.")
         while True:
@@ -43,20 +49,20 @@ class Main_Interface():
                      query = input("\nUser: ")
                      if query == "/quit":
                             self.logger.info("quit command has been used")
-                            
+
                             while True:
                                 console.print("Are you sure you would like to quit? Y or N?", style="bold red")
                                 confirm = input("User: ")
                                 if confirm.upper() == "Y":
-                                   
                                    sys.exit(1)
                                 elif confirm.upper() == "N":
                                    break
-                                
+
                                 else:
                                    console.print("\nInvalid Input! Try Y or N!")
-                               
+
                      elif query == "/help":
+                         self.logger.info("help command was used")
                          console.rule("HELP", style="#fcc200 bold")
                          console.print("""
 /help: brings up this dialog.
