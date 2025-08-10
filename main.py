@@ -1,13 +1,12 @@
 from Interface import Main_Interface
 import sys
-
+import argparse
 
 def main():
-    if len(sys.argv) > 1:
-        print("Usage: Type questions then press enter.\nType /quit to leave.")
-    else:
-        main_interface = Main_Interface()
-        main_interface.run()
+    parser = argparse.ArgumentParser()
+    args = parser.parse_args()
+    main_interface = Main_Interface(args)
+    main_interface.run()
 
 if __name__ == "__main__":
     main()

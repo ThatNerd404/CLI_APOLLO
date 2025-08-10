@@ -4,6 +4,7 @@ from logging.handlers import RotatingFileHandler
 import os
 import logging
 import sys 
+
 #TODO add new command to load files into apollo with the /load filename.file maybe use the find command somehow?
 #TODO add flag in command to specify which model to use 
 #TODO add command to save a response with /save 
@@ -12,8 +13,13 @@ import sys
 
 
 class Main_Interface():
-    def __init__(self):
+    def __init__(self,args):
+                self.args = args
+                with open("sys_prompt.txt","r") as sys_instruct:
+                    self.sys_prompt = sys_instruct.read()
+
                 os.system('clear')
+                #console.print(self.args)
                 console.print("""
 
           /$$$$$$  /$$$$$$$   /$$$$$$  /$$       /$$        /$$$$$$ 
@@ -28,7 +34,7 @@ class Main_Interface():
                                                         
         """, justify="center", style="#fcc200")
                 console.rule("", style="#fcc200")
-                self.convo_history = [{"role": "system", "content": "You are a helpful AI assisant named APOLLO. You refer to the user as Sir Cotterman.\n                          "}]
+                self.convo_history = [{"role": "system", "content": self.sys_prompt}]
                 
                 # Setup logger and rotating file handler
                 self.logger = logging.getLogger("logger")
@@ -51,7 +57,7 @@ class Main_Interface():
                             self.logger.info("quit command has been used")
 
                             while True:
-                                console.print("Are you sure you would like to quit? Y or N?", style="bold red")
+                                console.print("Are you sure you would like to quit? Your conversation will not be saved!\nY or N?", justify="center",style="bold red")
                                 confirm = input("User: ")
                                 if confirm.upper() == "Y":
                                    sys.exit(1)
@@ -71,7 +77,7 @@ class Main_Interface():
                                    
                      elif query == "/reset":
                            self.logger.info("reset command has been used")
-                           self.convo_history = [{"role": "system", "content": "You are a helpful AI assisant named APOLLO. You refer to the user as Sir Cotterman.\n                          "}]
+                           self.convo_history = [{"role": "system", "content": self.sys_prompt}]
                            console.print("Conversation history reset.", style="green bold")
                      else:
                             self.logger.info("Response generation has begun")
