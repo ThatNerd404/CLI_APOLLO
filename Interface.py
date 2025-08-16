@@ -18,6 +18,7 @@ class Main_Interface():
                 self.args = args
                 with open("/home/smartfella/programming_junk/CLI_APOLLO/sys_prompt.txt","r") as sys_instruct:
                     self.sys_prompt = sys_instruct.read()
+                # makes the max length for the convo history 10 should add flag to change 
                 self.convo_history = deque(maxlen=10)
                 self.convo_history.append({"role": "system", "content": self.sys_prompt})
                 
