@@ -9,4 +9,5 @@ dependencies = [
     "llama-cpp-python>=0.3.14",
     "logging>=0.4.9.6",
     "rich>=14.0.0",
+    "scikit-learn>=1.7.1",
 ]

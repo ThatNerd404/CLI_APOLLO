@@ -1,6 +1,8 @@
 from da_console import console
 from LLAMA_Worker import Llama_Worker
 from logging.handlers import RotatingFileHandler
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 from collections import deque
 import os
 import logging
@@ -58,31 +60,36 @@ class Main_Interface():
                      console.print("\nUser: ", style="bold #00643e",end="")
                      query = input("")
                      if query == "/quit":
-                            self.logger.info("quit command has been used")
+                        self.logger.info("quit command has been used")
 
-                            while True:
-                                console.print("Are you sure you would like to quit? Your conversation will not be saved!\nY or N?", justify="center",style="bold red")
-                                console.print("\nUser: ", style="bold #00643e",end="")
-                                confirm = input("")
-                                if confirm.upper() == "Y":
-                                   sys.exit(1)
-                                elif confirm.upper() == "N":
-                                   break
+                        while True:
+                            console.print("Are you sure you would like to quit? Your conversation will not be saved!\nY or N?", justify="center",style="bold red")
+                            console.print("\nUser: ", style="bold #00643e",end="")
+                            confirm = input("")
+                            if confirm.upper() == "Y":
+                                sys.exit(1)
+                            elif confirm.upper() == "N":
+                                break
 
-                                else:
-                                   console.print("\nInvalid Input! Try Y or N!")
+                            else:
+                                console.print("\nInvalid Input! Try Y or N!")
+                     
                      elif query == "/reset":
                         self.logger.info("reset command was used")
                         self.convo_history = [{"role": "system", "content": self.sys_prompt}]
                         self.run()
+                     elif query == "/load":
+                        self.logger.info("load command was used")
+                        e = os.path.realpath(os.system(f"find / -name {filename}")
 
                      elif query == "/help":
-                         self.logger.info("help command was used")
-                         console.rule("HELP", style="#fcc200 bold")
-                         console.print("""
+                        self.logger.info("help command was used")
+                        console.rule("HELP", style="#fcc200 bold")
+                        console.print("""
 /help: brings up this dialog.
 /quit: quits the application.
 /reset: resets the conversation history.
+/load {filename}: loads a file into the conversation history.
 """, style="blue")
                                    
                      else:
