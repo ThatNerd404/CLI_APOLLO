@@ -6,8 +6,9 @@ from sklearn.metrics.pairwise import cosine_similarity
 from collections import deque
 import os
 import logging
-import sys 
-
+import sys
+import re
+import subprocess
 #TODO add new command to load files into apollo with the /load filename.file maybe use the find command somehow?
 #TODO add flag in command to specify which model to use 
 #TODO add command to save a response with /save 
@@ -78,9 +79,28 @@ class Main_Interface():
                         self.logger.info("reset command was used")
                         self.convo_history = [{"role": "system", "content": self.sys_prompt}]
                         self.run()
-                     elif query == "/load":
+
+                     elif "/load" in query:
                         self.logger.info("load command was used")
-                        e = os.path.realpath(os.system(f"find / -name {filename}")
+                        match = re.search(r"/load\s+([^\s]+)", query)
+                        if match:
+                            filename = match.group(1)
+                            try:
+                                with console.status("Locating File...", spinner="dots") as status:
+                                    result = subprocess.run(
+                                    ["find", "/", "-name", filename],
+                                    capture_output=True,
+                                    text=True
+                                    )
+                                path = result.stdout.strip().split("\n")[0] if result.stdout.strip() else None
+                                if path:
+                                    console.print(f"Found file at: {path}", style="bold green")
+                                else:
+                                    console.print("File not found.", style="bold red")
+                            except Exception as e:
+                                console.print(f"Error while searching: {e}", style="bold red")
+                        else:
+                            console.print("Usage: /load filename", style="bold yellow")
 
                      elif query == "/help":
                         self.logger.info("help command was used")
