@@ -94,7 +94,14 @@ class Main_Interface():
                                     )
                                 path = result.stdout.strip().split("\n")[0] if result.stdout.strip() else None
                                 if path:
-                                    console.print(f"Found file at: {path}", style="bold green")
+                                    console.print(f"File loaded: {path}", style="red bold")
+                                    self.logger.info(f"Found file at: {path}")
+                                    with open(path,"r") as loaded_file:
+                                        file_contents = loaded_file.read()
+                                        self.convo_history.append({
+                                            "role": "assistant",
+                                            "content": f"(Reference document loaded from {filename}):\n\n{file_contents}"})
+                                    self.logger.info(self.convo_history)
                                 else:
                                     console.print("File not found.", style="bold red")
                             except Exception as e:
@@ -115,6 +122,7 @@ class Main_Interface():
                      else:
                             self.logger.info("Response generation has begun")
                             self.convo_history.append({"role":"user","content": query})
+                            self.logger.info(f"current conversation history: {self.convo_history}")
                             Llama = Llama_Worker(model_path="/home/smartfella/programming_junk/CLI_APOLLO/Models/capybarahermes-2.5-mistral-7b.Q2_K.gguf",
                                                  messages=self.convo_history,
                                                  threads=8,
