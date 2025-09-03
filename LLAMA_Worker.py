@@ -41,7 +41,7 @@ class Llama_Worker():
             
             with suppress_stderr():
                 
-                for chunk in llm.create_chat_completion(messages=self.messages, temperature=0.3, max_tokens=512, stream=True):
+                for chunk in llm.create_chat_completion(messages=self.messages, temperature=0.3, max_tokens=1024, stream=True):
                     delta = chunk["choices"][0]["delta"].get("content", "")
                     if delta:
                         response_text += delta

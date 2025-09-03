@@ -1,18 +1,17 @@
 from da_console import console
 from LLAMA_Worker import Llama_Worker
 from logging.handlers import RotatingFileHandler
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
 from collections import deque
 import os
 import logging
 import sys
 import re
 import subprocess
-#TODO add new command to load files into apollo with the /load filename.file maybe use the find command somehow?
+import time
+
+#TODO add command to create todo lists and stuff
 #TODO add flag in command to specify which model to use 
 #TODO add command to save a response with /save 
-#TODO add a command to set timers to help with productivity and stuff
 #TODO add a flag for doing a voice chat mode 
 
 
@@ -54,7 +53,7 @@ class Main_Interface():
                                                                     
         """, justify="center", style="#fcc200")
         console.rule("", style="#fcc200")
-        console.print("Input your prompt then press enter. Type /quit to leave.")
+        console.print("Type /help for assistance!")
         
         while True:
                try:
@@ -101,14 +100,17 @@ class Main_Interface():
                                         self.convo_history.append({
                                             "role": "assistant",
                                             "content": f"(Reference document loaded from {filename}):\n\n{file_contents}"})
-                                    self.logger.info(self.convo_history)
+                                    self.logger.info(f"file loaded:{filename}")
                                 else:
                                     console.print("File not found.", style="bold red")
                             except Exception as e:
                                 console.print(f"Error while searching: {e}", style="bold red")
                         else:
                             console.print("Usage: /load filename", style="bold yellow")
-
+                     elif query == "/todo":
+                        self.logger.info("todo command was used")
+                        console.rule("TODO", style="#fcc200 bold")
+                        console.print("This is where my todo-list would be...\nIF I HAD ONE!!!")
                      elif query == "/help":
                         self.logger.info("help command was used")
                         console.rule("HELP", style="#fcc200 bold")
@@ -117,22 +119,24 @@ class Main_Interface():
 /quit: quits the application.
 /reset: resets the conversation history.
 /load {filename}: loads a file into the conversation history.
+/todo: brings up the todo dialog where you create and use todo-lists.
 """, style="blue")
                                    
                      else:
                             self.logger.info("Response generation has begun")
                             self.convo_history.append({"role":"user","content": query})
-                            self.logger.info(f"current conversation history: {self.convo_history}")
+                            start_time = time.perf_counter() 
                             Llama = Llama_Worker(model_path="/home/smartfella/programming_junk/CLI_APOLLO/Models/capybarahermes-2.5-mistral-7b.Q2_K.gguf",
                                                  messages=self.convo_history,
                                                  threads=8,
                                                  context=2048,
-                                                 gpu_layers=0
+                                                 gpu_layers=0,
                                                  )
                             with console.status("Generating Response...", spinner="dots") as status:
                                    response = Llama.generate_response(status)
                             self.convo_history.append({"role":"assistant","content": response})
-
+                            elapsed_time = time.perf_counter() - start_time
+                            self.logger.info(f"Response completed in {elasped_time:.2f} seconds")
                except Exception as e:
                       self.logger.error(f"Error Occurred: {e}")
                       console.print(f"Apollo has run into an unexpected error: {e}",style="red bold")
