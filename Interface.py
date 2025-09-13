@@ -136,7 +136,7 @@ class Main_Interface():
                                    response = Llama.generate_response(status)
                             self.convo_history.append({"role":"assistant","content": response})
                             elapsed_time = time.perf_counter() - start_time
-                            self.logger.info(f"Response completed in {elasped_time:.2f} seconds")
+                            self.logger.info(f"Response completed in {elapsed_time:.2f} seconds")
                except Exception as e:
                       self.logger.error(f"Error Occurred: {e}")
                       console.print(f"Apollo has run into an unexpected error: {e}",style="red bold")
