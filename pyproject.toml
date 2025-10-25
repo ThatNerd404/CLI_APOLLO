@@ -8,6 +8,8 @@ dependencies = [
     "argparse>=1.4.0",
     "llama-cpp-python>=0.3.14",
     "logging>=0.4.9.6",
+    "requests>=2.32.5",
     "rich>=14.0.0",
     "scikit-learn>=1.7.1",
+    "textual>=6.2.1",
 ]

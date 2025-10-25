@@ -4,6 +4,7 @@ import os
 import sys
 import contextlib
 
+
 @contextlib.contextmanager
 def suppress_stderr():
     """Suppress stderr output temporarily (like llama.cpp log spam)."""
@@ -19,6 +20,7 @@ def suppress_stderr():
 class Llama_Worker():
     def __init__(self,model_path,messages,threads=6,context=2048,gpu_layers=0):
         """Initialization of LLAMA"""
+        self.server = "http://100.111.62.92:8000"
         self.model_path = model_path
         self.messages = messages
         self.threads = threads
