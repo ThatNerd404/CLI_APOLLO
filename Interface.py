@@ -19,8 +19,7 @@ class Main_Interface():
     def __init__(self,args):
                 self.args = args
                 # makes the max length for the convo history 10 should add flag to change 
-                self.convo_history = deque(maxlen=10)
-                
+                self.convo_history = []                
                 # Setup logger and rotating file handler
                 self.logger = logging.getLogger("logger")
                 self.logger.setLevel(logging.DEBUG)
@@ -123,11 +122,7 @@ class Main_Interface():
                             self.logger.info("Response generation has begun")
                             self.convo_history.append({"role":"user","content": query})
                             start_time = time.perf_counter() 
-                            Llama = Llama_Worker(model_path="/home/smartfella/programming_junk/CLI_APOLLO/Models/capybarahermes-2.5-mistral-7b.Q2_K.gguf",
-                                                 messages=self.convo_history,
-                                                 threads=8,
-                                                 context=2048,
-                                                 gpu_layers=0,
+                            Llama = Llama_Worker(messages=self.convo_history
                                                  )
                             with console.status("Generating Response...", spinner="dots") as status:
                                    response = Llama.generate_response(status)
