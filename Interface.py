@@ -18,9 +18,31 @@ import time
 class Main_Interface():
     def __init__(self,args):
                 self.args = args
-                # makes the max length for the convo history 10 should add flag to change 
-                self.convo_history = []                
-                # Setup logger and rotating file handler
+                self.convo_history = []
+                os.system('clear')
+                        #console.print(self.args)
+                console.print("""
+
+                  /$$$$$$  /$$$$$$$   /$$$$$$  /$$       /$$        /$$$$$$ 
+                 /$$__  $$| $$__  $$ /$$__  $$| $$      | $$       /$$__  $$
+                | $$  \ $$| $$  \ $$| $$  \ $$| $$      | $$      | $$  \ $$
+                | $$$$$$$$| $$$$$$$/| $$  | $$| $$      | $$      | $$  | $$
+                | $$__  $$| $$____/ | $$  | $$| $$      | $$      | $$  | $$
+                | $$  | $$| $$      | $$  | $$| $$      | $$      | $$  | $$
+                | $$  | $$| $$      |  $$$$$$/| $$$$$$$$| $$$$$$$$|  $$$$$$/
+                |__/  |__/|__/       \______/ |________/|________/ \______/ 
+                                                                            
+                                                                            
+                """, justify="center", style="#fcc200")
+                console.rule("", style="#fcc200")
+                console.print("Type /help for assistance!")
+                
+
+                # pre-loading the ai model  
+                with console.status("Pre-loading model...", spinner="dots") as status:
+                    self.Llama = Llama_Worker()
+
+                # setting up the logger
                 self.logger = logging.getLogger("logger")
                 self.logger.setLevel(logging.DEBUG)
                 handler = RotatingFileHandler(
@@ -29,28 +51,9 @@ class Main_Interface():
                 '%(asctime)s - %(levelname)s - %(message)s',"%Y-%m-%d %H:%M:%S")
                 handler.setFormatter(formatter)
                 self.logger.addHandler(handler)
-
                 self.logger.debug("Finished Initialization")
 
     def run(self):
-        os.system('clear')
-                #console.print(self.args)
-        console.print("""
-
-          /$$$$$$  /$$$$$$$   /$$$$$$  /$$       /$$        /$$$$$$ 
-         /$$__  $$| $$__  $$ /$$__  $$| $$      | $$       /$$__  $$
-        | $$  \ $$| $$  \ $$| $$  \ $$| $$      | $$      | $$  \ $$
-        | $$$$$$$$| $$$$$$$/| $$  | $$| $$      | $$      | $$  | $$
-        | $$__  $$| $$____/ | $$  | $$| $$      | $$      | $$  | $$
-        | $$  | $$| $$      | $$  | $$| $$      | $$      | $$  | $$
-        | $$  | $$| $$      |  $$$$$$/| $$$$$$$$| $$$$$$$$|  $$$$$$/
-        |__/  |__/|__/       \______/ |________/|________/ \______/ 
-                                                                    
-                                                                    
-        """, justify="center", style="#fcc200")
-        console.rule("", style="#fcc200")
-        console.print("Type /help for assistance!")
-        
         while True:
                try:
                      console.print("\nUser: ", style="bold #00643e",end="")
@@ -122,10 +125,9 @@ class Main_Interface():
                             self.logger.info("Response generation has begun")
                             self.convo_history.append({"role":"user","content": query})
                             start_time = time.perf_counter() 
-                            Llama = Llama_Worker(messages=self.convo_history
-                                                 )
+                            
                             with console.status("Generating Response...", spinner="dots") as status:
-                                   response = Llama.generate_response(status)
+                                   response = self.Llama.generate_response(self.convo_history,status)
                             self.convo_history.append({"role":"assistant","content": response})
                             elapsed_time = time.perf_counter() - start_time
                             self.logger.info(f"Response completed in {elapsed_time:.2f} seconds")
