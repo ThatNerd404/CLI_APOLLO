@@ -2,25 +2,27 @@ from da_console import console
 import os
 import requests
 import json
-#TODO: make function only be inited once and not constantly
 
 class Llama_Worker():
-    def __init__(self):
+    def __init__(self,model="mistral:7b"):
         """Initialization of LLAMA"""
-        self.server = "http://100.111.62.92:8000/api/chat"
+        self.chat_server = "http://100.111.62.92:8000/api/chat"
+        self.pull_server = "http://100.111.62.92:8000/api/pull"
+
+        self.model = model
         payload = {
-                    "model":"mistral:7b",
+                    "model": self.model,
                     "keep_alive":-1,
                     "stream":True}
 
         # empty request to preload the model
-        preload = requests.post(self.server,json=payload )
+        preload = requests.post(self.chat_server,json=payload )
     
     def generate_response(self,messages,status):
         try:
             self.messages = messages
             payload = {
-                "model":"mistral:7b",
+                "model":self.model,
                 "messages":self.messages,
                 "keep_alive": -1,
                 "stream":True}
@@ -29,7 +31,7 @@ class Llama_Worker():
             response_text = ""
             first_line = True
             
-            response = requests.post(self.server, json=payload, stream=True)
+            response = requests.post(self.chat_server, json=payload, stream=True)
                                
             for line in response.iter_lines():
                 if first_line:
@@ -43,9 +45,24 @@ class Llama_Worker():
                 response_text += data["message"]["content"]
             return response_text
 
-
-
         except Exception as e:
             console.print(f"Error Occured:{e}", style="red bold")
         except KeyboardInterrupt:
             console.print("\nRequest cancelled.", style="red bold")
+    
+    def pull_model(self, new_model, status):
+        try:
+            self.status = status
+            self.new_model = new_model
+            payload = {
+                "model": self.new_model}
+            
+            response = requests.post(self.pull_server, json=payload)
+            self.status.stop()
+            console.print(f"Model: {self.new_model} loaded successfully!")
+            return self.new_model
+        except Exception as e:
+            console.print(f"Error Occured:{e}", style="red bold")
+        except KeyboardInterrupt:
+            console.print("\nRequest cancelled.", style="red bold")
+

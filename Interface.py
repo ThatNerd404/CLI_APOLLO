@@ -9,10 +9,11 @@ import re
 import subprocess
 import time
 
-#TODO add command to create todo lists and stuff
-#TODO add flag in command to specify which model to use 
-#TODO add command to save a response with /save 
-#TODO add a flag for doing a voice chat mode 
+# TODO: add command to pull models and switch models
+# TODO: add command to create todo lists and stuff
+# TODO: add flag in command to specify which model to use 
+# TODO: add command to save a response with /save 
+# TODO: add a flag for doing a voice chat mode 
 
 
 class Main_Interface():
@@ -20,7 +21,6 @@ class Main_Interface():
                 self.args = args
                 self.convo_history = []
                 os.system('clear')
-                        #console.print(self.args)
                 console.print("""
 
                   /$$$$$$  /$$$$$$$   /$$$$$$  /$$       /$$        /$$$$$$ 
@@ -52,13 +52,14 @@ class Main_Interface():
                 handler.setFormatter(formatter)
                 self.logger.addHandler(handler)
                 self.logger.debug("Finished Initialization")
-
+                
+                self.logger.debug(f"Args: {self.args}")
     def run(self):
         while True:
                try:
                      console.print("\nUser: ", style="bold #00643e",end="")
                      query = input("")
-                     if query == "/quit":
+                     if query == "/q":
                         self.logger.info("quit command has been used")
 
                         while True:
@@ -73,14 +74,14 @@ class Main_Interface():
                             else:
                                 console.print("\nInvalid Input! Try Y or N!")
                      
-                     elif query == "/reset":
+                     elif query == "/r":
                         self.logger.info("reset command was used")
                         self.convo_history = []
                         self.run()
 
-                     elif "/load" in query:
+                     elif "/l" in query:
                         self.logger.info("load command was used")
-                        match = re.search(r"/load\s+([^\s]+)", query)
+                        match = re.search(r"/l\s+([^\s]+)", query)
                         if match:
                             filename = match.group(1)
                             try:
@@ -106,19 +107,25 @@ class Main_Interface():
                                 console.print(f"Error while searching: {e}", style="bold red")
                         else:
                             console.print("Usage: /load filename", style="bold yellow")
-                     elif query == "/todo":
-                        self.logger.info("todo command was used")
-                        console.rule("TODO", style="#fcc200 bold")
-                        console.print("This is where my todo-list would be...\nIF I HAD ONE!!!")
-                     elif query == "/help":
+                     
+                     elif "/pm" in query:
+                        self.logger.info("pull model command used")
+                        match = re.search(r"/pm\s+([^\s]+)", query)
+                        if match:
+                            model_name = match.group(1)
+                            with console.status("Pulling model...", spinner="dots") as status:
+                                downloaded_model = self.Llama.pull_model(model_name,status)
+                                self.logger.info(f"Downloaded model: {model_name}")
+
+                     elif query == "/h":
                         self.logger.info("help command was used")
                         console.rule("HELP", style="#fcc200 bold")
                         console.print("""
-/help: brings up this dialog.
-/quit: quits the application.
-/reset: resets the conversation history.
-/load {filename}: loads a file into the conversation history.
-/todo: brings up the todo dialog where you create and use todo-lists.
+/h: brings up this dialog.
+/q: quits the application.
+/r: resets the conversation history.
+/l filename: loads a file into the conversation history.
+/pm model_name: pulls a model from the ollama directory and downloads it
 """, style="blue")
                                    
                      else:
