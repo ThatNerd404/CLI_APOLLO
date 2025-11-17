@@ -1,7 +1,6 @@
 from da_console import console
 from LLAMA_Worker import Llama_Worker
 from logging.handlers import RotatingFileHandler
-from collections import deque
 import os
 import logging
 import sys
@@ -9,34 +8,14 @@ import re
 import subprocess
 import time
 
-# TODO: add command to pull models and switch models
-# TODO: add command to create todo lists and stuff
-# TODO: add flag in command to specify which model to use 
-# TODO: add command to save a response with /save 
-# TODO: add a flag for doing a voice chat mode 
-
+# TODO: add command to save a response with /s 
+# TODO: add markitdown for creating RAG
 
 class Main_Interface():
     def __init__(self,args):
                 self.args = args
                 self.convo_history = []
-                os.system('clear')
-                console.print("""
-
-                  /$$$$$$  /$$$$$$$   /$$$$$$  /$$       /$$        /$$$$$$ 
-                 /$$__  $$| $$__  $$ /$$__  $$| $$      | $$       /$$__  $$
-                | $$  \ $$| $$  \ $$| $$  \ $$| $$      | $$      | $$  \ $$
-                | $$$$$$$$| $$$$$$$/| $$  | $$| $$      | $$      | $$  | $$
-                | $$__  $$| $$____/ | $$  | $$| $$      | $$      | $$  | $$
-                | $$  | $$| $$      | $$  | $$| $$      | $$      | $$  | $$
-                | $$  | $$| $$      |  $$$$$$/| $$$$$$$$| $$$$$$$$|  $$$$$$/
-                |__/  |__/|__/       \______/ |________/|________/ \______/ 
-                                                                            
-                                                                            
-                """, justify="center", style="#fcc200")
-                console.rule("", style="#fcc200")
-                console.print("Type /help for assistance!")
-                
+               
 
                 # pre-loading the ai model  
                 with console.status("Pre-loading model...", spinner="dots") as status:
@@ -55,6 +34,23 @@ class Main_Interface():
                 
                 self.logger.debug(f"Args: {self.args}")
     def run(self):
+        os.system('clear')
+        console.print("""
+
+          /$$$$$$  /$$$$$$$   /$$$$$$  /$$       /$$        /$$$$$$ 
+         /$$__  $$| $$__  $$ /$$__  $$| $$      | $$       /$$__  $$
+        | $$  \ $$| $$  \ $$| $$  \ $$| $$      | $$      | $$  \ $$
+        | $$$$$$$$| $$$$$$$/| $$  | $$| $$      | $$      | $$  | $$
+        | $$__  $$| $$____/ | $$  | $$| $$      | $$      | $$  | $$
+        | $$  | $$| $$      | $$  | $$| $$      | $$      | $$  | $$
+        | $$  | $$| $$      |  $$$$$$/| $$$$$$$$| $$$$$$$$|  $$$$$$/
+        |__/  |__/|__/       \______/ |________/|________/ \______/ 
+                                                                    
+                                                                    
+        """, justify="center", style="#fcc200")
+        console.rule("", style="#fcc200")
+        console.print("Type /h for assistance!")
+
         while True:
                try:
                      console.print("\nUser: ", style="bold #00643e",end="")
@@ -115,7 +111,16 @@ class Main_Interface():
                             model_name = match.group(1)
                             with console.status("Pulling model...", spinner="dots") as status:
                                 downloaded_model = self.Llama.pull_model(model_name,status)
-                                self.logger.info(f"Downloaded model: {model_name}")
+                            self.logger.info(f"Downloaded model: {downloaded_model}")
+
+                     elif "/sm" in query:
+                        self.logger.info("swap model command used")
+                        match = re.search(r"/sm\s+([^\s]+)", query)
+                        if match:
+                            model_name = match.group(1)
+                            with console.status("Swapping model...", spinner="dots") as status:
+                                swapped_model = self.Llama.swap_model(model_name,status)
+                            self.logger.info(f"Swapped Model: {swapped_model}")
 
                      elif query == "/h":
                         self.logger.info("help command was used")
@@ -125,7 +130,8 @@ class Main_Interface():
 /q: quits the application.
 /r: resets the conversation history.
 /l filename: loads a file into the conversation history.
-/pm model_name: pulls a model from the ollama directory and downloads it
+/pm model_name: pulls a model from the ollama directory and downloads it.
+/sm model_name: swaps current model into different one.
 """, style="blue")
                                    
                      else:
@@ -138,6 +144,7 @@ class Main_Interface():
                             self.convo_history.append({"role":"assistant","content": response})
                             elapsed_time = time.perf_counter() - start_time
                             self.logger.info(f"Response completed in {elapsed_time:.2f} seconds")
+
                except Exception as e:
                       self.logger.error(f"Error Occurred: {e}")
                       console.print(f"Apollo has run into an unexpected error: {e}",style="red bold")

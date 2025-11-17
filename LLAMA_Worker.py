@@ -61,8 +61,32 @@ class Llama_Worker():
             self.status.stop()
             console.print(f"Model: {self.new_model} loaded successfully!")
             return self.new_model
+
         except Exception as e:
             console.print(f"Error Occured:{e}", style="red bold")
         except KeyboardInterrupt:
             console.print("\nRequest cancelled.", style="red bold")
+
+    def swap_model(self, model, status):
+        try:
+            self.model = model
+            self.status = status
+            payload = {
+                        "model": self.model,
+                        "keep_alive":-1
+            }
+
+            # empty request to preload the model
+            preload = requests.post(self.chat_server,json=payload )
+            
+            self.status.stop()
+            console.print(f"Current loaded model: {self.model}")
+            return self.model
+
+        except Exception as e:
+            console.print(f"Error Occured:{e}", style="red bold")
+
+        except KeyboardInterrupt:
+            console.print("\nRequest cancelled.", style="red bold")
+
 
