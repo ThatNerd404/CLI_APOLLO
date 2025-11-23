@@ -6,18 +6,22 @@ import json
 class Llama_Worker():
     def __init__(self,model="mistral:7b"):
         """Initialization of LLAMA"""
-        self.chat_server = "http://100.111.62.92:8000/api/chat"
-        self.pull_server = "http://100.111.62.92:8000/api/pull"
+        self.chat_server = "http://100.111.62.92:11434/api/chat"
+        self.pull_server = "http://100.111.62.92:11434/api/pull"
 
         self.model = model
         payload = {
                     "model": self.model,
                     "keep_alive":-1,
-                    "stream":True}
+                    "stream":True,
+                    "messages":[]}
+        try:
+            # empty request to preload the model
+            preload = requests.post(self.chat_server,json=payload )
+            console.print("loaded successfully")
+        except Exception as e:
+            console.print(f"Error occurred: {e}")
 
-        # empty request to preload the model
-        preload = requests.post(self.chat_server,json=payload )
-    
     def generate_response(self,messages,status):
         try:
             self.messages = messages

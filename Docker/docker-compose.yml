@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  # Ollama for LLM inference
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    environment:
+      - OLLAMA_DEBUG=1
+    restart: unless-stopped
+  
+
+  # ChromaDB - Vector database for embeddings
+  chromadb:
+    image: chromadb/chroma:latest
+    container_name: chromadb
+    ports:
+      - "8000:8000"
+    volumes:
+      - chroma_data:/chroma/chroma
+    environment:
+      - IS_PERSISTENT=TRUE
+      - ANONYMIZED_TELEMETRY=FALSE
+    restart: unless-stopped
+
+volumes:
+  ollama_data:
+  chroma_data:
+
+networks:
+  ai-network:
+    driver: bridge
