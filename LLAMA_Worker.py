@@ -3,13 +3,15 @@ import requests
 import json
 
 class Llama_Worker():
-    def __init__(self,console, model="mistral:7b"):
+    def __init__(self,console, model="mistral:7b", embedding_model="embeddinggemma"):
         """Initialization of LLAMA"""
         self.chat_url = "http://100.111.62.92:11434/api/chat"
         self.pull_url = "http://100.111.62.92:11434/api/pull"
         self.list_models_url = "http://100.111.62.92:11434/api/ps"
+        self.generate_embeddings_url = "http://100.111.62.92:11434/api/embed"
 
         self.model = model
+        self.embedding_model = embedding_model
         self.console = console
         payload = {
                     "model": self.model,
@@ -96,9 +98,7 @@ class Llama_Worker():
             self.status.stop()
             model_list = []
             data = response.json()
-            for model in data["models"]:
-                    model_list.append(model["model"])
-            return model_list
+            return data["models"][0]["model"]
 
         except Exception as e:
             self.console.print(f"Error Occured:{e}", style="red bold")
@@ -106,5 +106,17 @@ class Llama_Worker():
         except KeyboardInterrupt:
             self.console.print("\nRequest cancelled.", style="red bold")
 
+    def generate_embeddings(self,file):
+        try:
+            payload = {
+                       "model": self.embedding_model,
+                       "input": file}
+            response = requests.post(self.generate_embeddings_url, json=payload)
+
+        except Exception as e:
+            self.console.print(f"Error Occured:{e}", style="red bold")
+
+        except KeyboardInterrupt:
+            self.console.print("\nRequest cancelled.", style="red bold")
 
 

@@ -8,7 +8,9 @@ import subprocess
 import time
 
 # TODO: add command to save a response with /s 
-# TODO: add markitdown for creating RAG
+# TODO: change /lf feature to take file and generate embeddings, then store said embeddings in the database.
+# TODO: create new command to query the database or possibly a flag? maybe make it always query the database?
+
 
 class Main_Interface():
     def __init__(self,args, console):
@@ -123,11 +125,10 @@ class Main_Interface():
                             self.logger.info(f"Swapped Model: {swapped_model}")
                      elif query == "/lm":
                         self.logger.info("list model command used")
-                        with self.console.status("Listing running models...", spinner="dots") as status:
-                            running_models = self.Llama.list_model(status)
-                        self.console.print("Currently running models:")
-                        for model in running_models:
-                            self.console.print(model)
+                        with self.console.status("Listing running model...", spinner="dots") as status:
+                            running_model = self.Llama.list_model(status)
+                        self.console.print("Currently running model:")
+                        self.console.print(running_model)
                      elif query == "/h":
                         self.logger.info("help command was used")
                         self.console.rule("HELP", style="#fcc200 bold")
@@ -138,9 +139,10 @@ class Main_Interface():
 /lf filename: loads a file into the conversation history.
 /pm model_name: pulls a model from the ollama directory and downloads it.
 /sm model_name: swaps current model into different one.
-/lm: lists the current running models.
+/lm: lists the current running model.
 """, style="blue")
-                                   
+                        self.console.rule("", style="#fcc200 bold")
+                                  
                      else:
                             self.logger.info("Response generation has begun")
                             self.convo_history.append({"role":"user","content": query})
