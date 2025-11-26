@@ -5,8 +5,10 @@ import json
 class Llama_Worker():
     def __init__(self,console, model="mistral:7b"):
         """Initialization of LLAMA"""
-        self.chat_server = "http://100.111.62.92:11434/api/chat"
-        self.pull_server = "http://100.111.62.92:11434/api/pull"
+        self.chat_url = "http://100.111.62.92:11434/api/chat"
+        self.pull_url = "http://100.111.62.92:11434/api/pull"
+        self.list_models_url = "http://100.111.62.92:11434/api/ps"
+
         self.model = model
         self.console = console
         payload = {
@@ -14,7 +16,7 @@ class Llama_Worker():
                     "keep_alive":-1,
                     "stream":True}
         # empty request to preload the model
-        preload = requests.post(self.chat_server,json=payload )
+        preload = requests.post(self.chat_url,json=payload )
 
     def generate_response(self,messages,status):
         try:
@@ -29,7 +31,7 @@ class Llama_Worker():
             response_text = ""
             first_line = True
             
-            response = requests.post(self.chat_server, json=payload, stream=True)
+            response = requests.post(self.chat_url, json=payload, stream=True)
                                
             for line in response.iter_lines():
                 if first_line:
@@ -55,7 +57,7 @@ class Llama_Worker():
             payload = {
                 "model": self.new_model}
             
-            response = requests.post(self.pull_server, json=payload)
+            response = requests.post(self.pull_url, json=payload)
             self.status.stop()
             self.console.print(f"Model: {self.new_model} loaded successfully!")
             return self.new_model
@@ -75,7 +77,7 @@ class Llama_Worker():
             }
 
             # empty request to preload the model
-            preload = requests.post(self.chat_server,json=payload )
+            preload = requests.post(self.chat_url,json=payload )
             
             self.status.stop()
             self.console.print(f"Current loaded model: {self.model}")
@@ -86,5 +88,23 @@ class Llama_Worker():
 
         except KeyboardInterrupt:
             self.console.print("\nRequest cancelled.", style="red bold")
+
+    def list_model(self, status):
+        try: 
+            self.status = status
+            response = requests.get(self.list_models_url)
+            self.status.stop()
+            model_list = []
+            data = response.json()
+            for model in data["models"]:
+                    model_list.append(model["model"])
+            return model_list
+
+        except Exception as e:
+            self.console.print(f"Error Occured:{e}", style="red bold")
+
+        except KeyboardInterrupt:
+            self.console.print("\nRequest cancelled.", style="red bold")
+
 
 

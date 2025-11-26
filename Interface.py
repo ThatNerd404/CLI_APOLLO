@@ -15,7 +15,6 @@ class Main_Interface():
                 self.args = args
                 self.console = console
                 self.convo_history = []
-               
 
                 # pre-loading the ai model  
                 with self.console.status("Pre-loading model...", spinner="dots") as status:
@@ -31,9 +30,10 @@ class Main_Interface():
                 handler.setFormatter(formatter)
                 self.logger.addHandler(handler)
                 self.logger.debug("Finished Initialization")
-                
                 self.logger.debug(f"Args: {self.args}")
+
     def run(self):
+        """asdfasdfas"""
         os.system('clear')
         self.console.print("""
 
@@ -75,7 +75,7 @@ class Main_Interface():
                         self.convo_history = []
                         self.run()
 
-                     elif "/l" in query:
+                     elif "/lf" in query:
                         self.logger.info("load command was used")
                         match = re.search(r"/l\s+([^\s]+)", query)
                         if match:
@@ -121,7 +121,13 @@ class Main_Interface():
                             with self.console.status("Swapping model...", spinner="dots") as status:
                                 swapped_model = self.Llama.swap_model(model_name,status)
                             self.logger.info(f"Swapped Model: {swapped_model}")
-
+                     elif query == "/lm":
+                        self.logger.info("list model command used")
+                        with self.console.status("Listing running models...", spinner="dots") as status:
+                            running_models = self.Llama.list_model(status)
+                        self.console.print("Currently running models:")
+                        for model in running_models:
+                            self.console.print(model)
                      elif query == "/h":
                         self.logger.info("help command was used")
                         self.console.rule("HELP", style="#fcc200 bold")
@@ -129,9 +135,10 @@ class Main_Interface():
 /h: brings up this dialog.
 /q: quits the application.
 /r: resets the conversation history.
-/l filename: loads a file into the conversation history.
+/lf filename: loads a file into the conversation history.
 /pm model_name: pulls a model from the ollama directory and downloads it.
 /sm model_name: swaps current model into different one.
+/lm: lists the current running models.
 """, style="blue")
                                    
                      else:

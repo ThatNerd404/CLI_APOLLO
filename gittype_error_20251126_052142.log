@@ -1,0 +1,9 @@
+ERROR OCCURRED AT: 2025-11-26 05:21:42 UTC
+ERROR TYPE: "gittype::error::GitTypeError"
+ERROR MESSAGE: Terminal error: repository_id is required for session_results
+EXECUTABLE: "/usr/local/bin/gittype"
+WORKING_DIR: "/home/smartfella/programming_junk/CLI_APOLLO"
+COMMAND_ARGS: ["gittype"]
+OS: linux
+ARCH: x86_64
+
