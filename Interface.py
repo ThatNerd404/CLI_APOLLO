@@ -1,4 +1,3 @@
-from da_console import console
 from LLAMA_Worker import Llama_Worker
 from logging.handlers import RotatingFileHandler
 import os
@@ -12,14 +11,15 @@ import time
 # TODO: add markitdown for creating RAG
 
 class Main_Interface():
-    def __init__(self,args):
+    def __init__(self,args, console):
                 self.args = args
+                self.console = console
                 self.convo_history = []
                
 
                 # pre-loading the ai model  
-                with console.status("Pre-loading model...", spinner="dots") as status:
-                    self.Llama = Llama_Worker()
+                with self.console.status("Pre-loading model...", spinner="dots") as status:
+                    self.Llama = Llama_Worker(self.console)
 
                 # setting up the logger
                 self.logger = logging.getLogger("logger")
@@ -35,7 +35,7 @@ class Main_Interface():
                 self.logger.debug(f"Args: {self.args}")
     def run(self):
         os.system('clear')
-        console.print("""
+        self.console.print("""
 
           /$$$$$$  /$$$$$$$   /$$$$$$  /$$       /$$        /$$$$$$ 
          /$$__  $$| $$__  $$ /$$__  $$| $$      | $$       /$$__  $$
@@ -48,19 +48,19 @@ class Main_Interface():
                                                                     
                                                                     
         """, justify="center", style="#fcc200")
-        console.rule("", style="#fcc200")
-        console.print("Type /h for assistance!")
+        self.console.rule("", style="#fcc200")
+        self.console.print("Type /h for assistance!")
 
         while True:
                try:
-                     console.print("\nUser: ", style="bold #00643e",end="")
+                     self.console.print("\nUser: ", style="bold #00643e",end="")
                      query = input("")
                      if query == "/q":
                         self.logger.info("quit command has been used")
 
                         while True:
-                            console.print("Are you sure you would like to quit? Your conversation will not be saved!\nY or N?", justify="center",style="bold red")
-                            console.print("\nUser: ", style="bold #00643e",end="")
+                            self.console.print("Are you sure you would like to quit? Your conversation will not be saved!\nY or N?", justify="center",style="bold red")
+                            self.console.print("\nUser: ", style="bold #00643e",end="")
                             confirm = input("")
                             if confirm.upper() == "Y":
                                 sys.exit(1)
@@ -81,7 +81,7 @@ class Main_Interface():
                         if match:
                             filename = match.group(1)
                             try:
-                                with console.status("Locating File...", spinner="dots") as status:
+                                with self.console.status("Locating File...", spinner="dots") as status:
                                     result = subprocess.run(
                                     ["find", "/", "-name", filename],
                                     capture_output=True,
@@ -89,7 +89,7 @@ class Main_Interface():
                                     )
                                 path = result.stdout.strip().split("\n")[0] if result.stdout.strip() else None
                                 if path:
-                                    console.print(f"File loaded: {path}", style="red bold")
+                                    self.console.print(f"File loaded: {path}", style="red bold")
                                     self.logger.info(f"Found file at: {path}")
                                     with open(path,"r") as loaded_file:
                                         file_contents = loaded_file.read()
@@ -98,18 +98,18 @@ class Main_Interface():
                                             "content": f"(Reference document loaded from {filename}):\n\n{file_contents}"})
                                     self.logger.info(f"file loaded:{filename}")
                                 else:
-                                    console.print("File not found.", style="bold red")
+                                    self.console.print("File not found.", style="bold red")
                             except Exception as e:
-                                console.print(f"Error while searching: {e}", style="bold red")
+                                self.console.print(f"Error while searching: {e}", style="bold red")
                         else:
-                            console.print("Usage: /load filename", style="bold yellow")
+                            self.console.print("Usage: /load filename", style="bold yellow")
                      
                      elif "/pm" in query:
                         self.logger.info("pull model command used")
                         match = re.search(r"/pm\s+([^\s]+)", query)
                         if match:
                             model_name = match.group(1)
-                            with console.status("Pulling model...", spinner="dots") as status:
+                            with self.console.status("Pulling model...", spinner="dots") as status:
                                 downloaded_model = self.Llama.pull_model(model_name,status)
                             self.logger.info(f"Downloaded model: {downloaded_model}")
 
@@ -118,14 +118,14 @@ class Main_Interface():
                         match = re.search(r"/sm\s+([^\s]+)", query)
                         if match:
                             model_name = match.group(1)
-                            with console.status("Swapping model...", spinner="dots") as status:
+                            with self.console.status("Swapping model...", spinner="dots") as status:
                                 swapped_model = self.Llama.swap_model(model_name,status)
                             self.logger.info(f"Swapped Model: {swapped_model}")
 
                      elif query == "/h":
                         self.logger.info("help command was used")
-                        console.rule("HELP", style="#fcc200 bold")
-                        console.print("""
+                        self.console.rule("HELP", style="#fcc200 bold")
+                        self.console.print("""
 /h: brings up this dialog.
 /q: quits the application.
 /r: resets the conversation history.
@@ -139,7 +139,7 @@ class Main_Interface():
                             self.convo_history.append({"role":"user","content": query})
                             start_time = time.perf_counter() 
                             
-                            with console.status("Generating Response...", spinner="dots") as status:
+                            with self.console.status("Generating Response...", spinner="dots") as status:
                                    response = self.Llama.generate_response(self.convo_history,status)
                             self.convo_history.append({"role":"assistant","content": response})
                             elapsed_time = time.perf_counter() - start_time
@@ -147,4 +147,4 @@ class Main_Interface():
 
                except Exception as e:
                       self.logger.error(f"Error Occurred: {e}")
-                      console.print(f"Apollo has run into an unexpected error: {e}",style="red bold")
+                      self.console.print(f"Apollo has run into an unexpected error: {e}",style="red bold")

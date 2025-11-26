@@ -6,6 +6,7 @@ readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
     "argparse>=1.4.0",
+    "chromadb>=1.3.5",
     "llama-cpp-python>=0.3.14",
     "logging>=0.4.9.6",
     "requests>=2.32.5",
