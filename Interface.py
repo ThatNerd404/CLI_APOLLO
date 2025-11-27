@@ -79,7 +79,7 @@ class Main_Interface():
 
                      elif "/lf" in query:
                         self.logger.info("load command was used")
-                        match = re.search(r"/l\s+([^\s]+)", query)
+                        match = re.search(r"/lf\s+([^\s]+)", query)
                         if match:
                             filename = match.group(1)
                             try:
@@ -95,10 +95,9 @@ class Main_Interface():
                                     self.logger.info(f"Found file at: {path}")
                                     with open(path,"r") as loaded_file:
                                         file_contents = loaded_file.read()
-                                        self.convo_history.append({
-                                            "role": "assistant",
-                                            "content": f"(Reference document loaded from {filename}):\n\n{file_contents}"})
-                                    self.logger.info(f"file loaded:{filename}")
+                                    embeddings = self.Llama.generate_embeddings(file_contents)
+                                    self.logger.info(f"file loaded: {filename}")
+                                    self.logger.info(f"embeddings generated: {embeddings}")
                                 else:
                                     self.console.print("File not found.", style="bold red")
                             except Exception as e:

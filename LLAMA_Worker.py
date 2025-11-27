@@ -106,12 +106,15 @@ class Llama_Worker():
         except KeyboardInterrupt:
             self.console.print("\nRequest cancelled.", style="red bold")
 
-    def generate_embeddings(self,file):
+    def generate_embeddings(self,text):
         try:
             payload = {
                        "model": self.embedding_model,
-                       "input": file}
+                       "input": text}
+
             response = requests.post(self.generate_embeddings_url, json=payload)
+            data = response.json()
+            return data["embeddings"]
 
         except Exception as e:
             self.console.print(f"Error Occured:{e}", style="red bold")
