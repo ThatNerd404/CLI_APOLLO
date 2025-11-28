@@ -1,6 +1,8 @@
 import os
 import requests
 import json
+import sys
+from requests.exceptions import Timeout, RequestException
 
 class Llama_Worker():
     def __init__(self,console, model="mistral:7b", embedding_model="embeddinggemma"):
@@ -13,13 +15,25 @@ class Llama_Worker():
         self.model = model
         self.embedding_model = embedding_model
         self.console = console
-        payload = {
+        try:
+            payload = {
                     "model": self.model,
                     "keep_alive":-1,
                     "stream":True}
-        # empty request to preload the model
-        preload = requests.post(self.chat_url,json=payload )
+            # empty request to preload the model
+            preload = requests.post(self.chat_url,json=payload, timeout=30)
 
+        except requests.exceptions.ConnectionError:
+            self.console.print("Error: Failed to connect to Ollama server. Ensure Ollama server is online and try again.", style="red bold")
+            sys.exit(1)
+        except Timeout:
+            self.console.print("Error: Connection to Ollama server timed out. Ensure Ollama server is online and try again.", 
+                             style="red bold")
+            sys.exit(1)
+        except RequestException as e:
+            self.console.print(f"Error: Network error during initialization: {e}\n Restart Ollama server and try again.", 
+                             style="red bold")
+            sys.exit(1)
     def generate_response(self,messages,status):
         try:
             self.messages = messages
