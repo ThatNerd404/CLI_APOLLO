@@ -2,7 +2,7 @@ import os
 import requests
 import json
 import sys
-from requests.exceptions import Timeout, RequestException
+from requests.exceptions import Timeout, RequestException, HTTPError
 
 class Llama_Worker():
     def __init__(self,console, model="mistral:7b", embedding_model="embeddinggemma"):
@@ -22,6 +22,11 @@ class Llama_Worker():
                     "stream":True}
             # empty request to preload the model
             preload = requests.post(self.chat_url,json=payload, timeout=300)
+            preload.raise_for_status()
+
+        except HTTPError:
+            self.console.print("Error: Failed to connect to Ollama server. Ensure Ollama server is online and try again.", style="red bold")
+            sys.exit(1)
 
         except requests.exceptions.ConnectionError:
             self.console.print("Error: Failed to connect to Ollama server. Ensure Ollama server is online and try again.", style="red bold")
@@ -54,6 +59,7 @@ class Llama_Worker():
             first_line = True
 
             response = requests.post(self.chat_url, json=payload, stream=True, timeout=300)
+            response.raise_for_status()
 
             for line in response.iter_lines():
                 if first_line:
@@ -67,22 +73,30 @@ class Llama_Worker():
                 response_text += data["message"]["content"]
             return response_text
 
+        except HTTPError as e:
+            self.status.stop()
+            self.console.print(f"Error: HTTP {e.response.status_code} - {e}", style="red bold")
+            return None
         except requests.exceptions.ConnectionError:
+            self.status.stop()
             self.console.print("Error: Failed to connect to Ollama server. Ensure Ollama server is online and try again.", style="red bold")
             return None
 
         except Timeout:
+            self.status.stop()
             self.console.print("Error: Connection to Ollama server timed out. Ensure Ollama server is online and try again.", 
                              style="red bold")
             return None
 
         except RequestException as e:
+            self.status.stop()
             self.console.print(f"Error: Network error during generation: {e}\n Restart Ollama server and try again.", 
                              style="red bold")
             return None
 
 
         except KeyboardInterrupt:
+            self.status.stop()
             self.console.print("\nRequest cancelled.", style="red bold")
             return None
 
@@ -94,68 +108,92 @@ class Llama_Worker():
                 "model": self.new_model}
 
             response = requests.post(self.pull_url, json=payload, timeout=300)
+            response.raise_for_status()
             self.status.stop()
             self.console.print(f"Model: {self.new_model} loaded successfully!")
             return self.new_model
-
+        except HTTPError as e:
+            self.status.stop()
+            if e.response.status_code == 404:
+                self.console.print(f"Error: Model '{model}' not found in Ollama", style="red bold")
+            else:
+                self.console.print(f"Error: HTTP {e.response.status_code} - {e}", style="red bold")
+            return None
 
         except requests.exceptions.ConnectionError:
+            self.status.stop()
             self.console.print("Error: Failed to connect to Ollama server. Ensure Ollama server is online and try again.", style="red bold")
             return None
 
         except Timeout:
+            self.status.stop()
             self.console.print("Error: Connection to Ollama server timed out. Ensure Ollama server is online and try again.", 
                              style="red bold")
             return None
 
         except RequestException as e:
+            self.status.stop()
             self.console.print(f"Error: Network error during initialization: {e}\n Restart Ollama server and try again.", 
                              style="red bold")
             return None
  
         except KeyboardInterrupt:
+            self.status.stop()
             self.console.print("\nRequest cancelled.", style="red bold")
             return None
 
         except Exception as e:
+            self.status.stop()
             self.console.print(f"Error Occured:{e}", style="red bold")
             return None
 
     def swap_model(self, model, status):
-        try:
-            self.model = model
-            self.status = status
-            payload = {
+
+        self.model = model
+        self.status = status
+        payload = {
                         "model": self.model,
                         "keep_alive":-1
             }
 
-            # empty request to preload the model
+        try:
             preload = requests.post(self.chat_url,json=payload, timeout=300)
-
+            preload.raise_for_status()
             self.status.stop()
             self.console.print(f"Current loaded model: {self.model}")
             return self.model
- 
+        except HTTPError as e:
+            self.status.stop()
+            if e.response.status_code == 404:
+                self.console.print(f"Error: Model '{self.model}' not found in Ollama", style="red bold")
+            else:
+                self.console.print(f"Error: HTTP {e.response.status_code} - {e}", style="red bold")
+            return None
+
         except requests.exceptions.ConnectionError:
+            self.status.stop()
             self.console.print("Error: Failed to connect to Ollama server. Ensure Ollama server is online and try again.", style="red bold")
             return None
 
         except Timeout:
+            self.status.stop()
             self.console.print("Error: Connection to Ollama server timed out. Ensure Ollama server is online and try again.", 
                              style="red bold")
             return None
 
         except RequestException as e:
+            self.status.stop()
             self.console.print(f"Error: Network error during initialization: {e}\n Restart Ollama server and try again.", 
                              style="red bold")
             return None
 
         except KeyboardInterrupt:
+            self.status.stop()
             self.console.print("\nRequest cancelled.", style="red bold")
             return None
 
         except Exception as e:
+            self.status.stop()
             self.console.print(f"Error Occured:{e}", style="red bold")
             return None
 
@@ -163,30 +201,40 @@ class Llama_Worker():
         try: 
             self.status = status
             response = requests.get(self.list_models_url, timeout=300)
+            response.raise_for_status()
             self.status.stop()
             model_list = []
             data = response.json()
             return data["models"][0]["model"]
 
+        except HTTPError as e:
+            self.status.stop()
+            self.console.print(f"Error: HTTP {e.response.status_code} - {e}", style="red bold")
+            return None
         except KeyboardInterrupt:
+            self.status.stop()
             self.console.print("\nRequest cancelled.", style="red bold")
             return None
 
         except requests.exceptions.ConnectionError:
+            self.status.stop()
             self.console.print("Error: Failed to connect to Ollama server. Ensure Ollama server is online and try again.", style="red bold")
             return None
 
         except Timeout:
+            self.status.stop()
             self.console.print("Error: Connection to Ollama server timed out. Ensure Ollama server is online and try again.", 
                              style="red bold")
             return None
 
         except RequestException as e:
+            self.status.stop()
             self.console.print(f"Error: Network error during initialization: {e}\n Restart Ollama server and try again.", 
                              style="red bold")
             return None
  
         except Exception as e:
+            self.status.stop()
             self.console.print(f"Error Occured:{e}", style="red bold")
             return None
 
@@ -198,9 +246,17 @@ class Llama_Worker():
                        "input": text}
 
             response = requests.post(self.generate_embeddings_url, json=payload, timeout=300)
+            response.raise_for_status()
             data = response.json()
             return data["embeddings"]
 
+        except HTTPError as e:
+
+            if e.response.status_code == 404:
+                self.console.print(f"Error: Model '{self.embedding_model}' not found in Ollama", style="red bold")
+            else:
+                self.console.print(f"Error: HTTP {e.response.status_code} - {e}", style="red bold")
+            return None
         except KeyboardInterrupt:
             self.console.print("\nRequest cancelled.", style="red bold")
             return None

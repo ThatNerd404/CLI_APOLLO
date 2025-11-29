@@ -58,7 +58,7 @@ class Main_Interface():
 
     def run(self):
         """Main Loop"""
-        
+        os.system("clear")        
         self.console.print("""
 
           /$$$$$$  /$$$$$$$   /$$$$$$  /$$       /$$        /$$$$$$ 
@@ -123,15 +123,27 @@ class Main_Interface():
         while True:
             self.console.print("Are you sure you would like to quit? Your conversation will not be saved!\nY or N?", justify="center",style="bold red")
             self.console.print("\nUser: ", style="bold #00643e",end="")
-            confirm = input("")
-            if confirm.upper() == "Y":
-                self.logger.info("quitting application")
-                sys.exit(1)
-            elif confirm.upper() == "N":
-                break
+            try:
+                confirm = input("")
+                if confirm.upper() == "Y":
+                    self.logger.info("quitting application")
+                    sys.exit(1)
+                elif confirm.upper() == "N":
+                    break
 
-            else:
-                self.console.print("\nInvalid Input! Try Y or N!")
+                else:
+                    self.console.print("\nInvalid Input! Try Y or N!")
+            except EOFError:
+                self.console.print("\nEOF detected. Exiting...", style="yellow")
+                self.logger.info("EOF detected, exiting application")
+                sys.exit(0)
+
+            except KeyboardInterrupt:
+                self.console.print("\n\nKeyboard interrupt detected. Exiting...", style="yellow")
+                self.logger.info("Keyboard interrupt during input")
+                sys.exit(0)
+
+
 
     def reset_command(self):
         self.logger.info("reset command was used")
