@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  # Ollama for LLM inference
   ollama:
     image: ollama/ollama:latest
     container_name: ollama
@@ -13,6 +12,17 @@ services:
       - OLLAMA_DEBUG=1
     restart: unless-stopped
 
+  sql_db:
+    image: mysql:latest
+    container_name: sql_db
+    ports:
+      - "8000:8000"
+    volumes:
+      - sql_db_data:/root/.sql_db
+    environment:
+      - MYSQL_ROOT_PASSWORD= Secret_PW
+      - MYSQL_DATABASE= Conversation_Storage
+    restart: unless-stopped
 volumes:
   ollama_data:
-
+  sql_db_data:
