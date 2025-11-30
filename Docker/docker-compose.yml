@@ -16,12 +16,12 @@ services:
     image: mysql:latest
     container_name: sql_db
     ports:
-      - "8000:8000"
+      - "8000:3306"
     volumes:
-      - sql_db_data:/root/.sql_db
+      - sql_db_data:/var/lib/mysql
     environment:
-      - MYSQL_ROOT_PASSWORD= Secret_PW
-      - MYSQL_DATABASE= Conversation_Storage
+      - MYSQL_ROOT_PASSWORD=Secret_PW
+      - MYSQL_DATABASE=Conversation_Storage
     restart: unless-stopped
 volumes:
   ollama_data:
