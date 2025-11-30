@@ -1,41 +1,24 @@
 from LLAMA_Worker import Llama_Worker
 from logging.handlers import RotatingFileHandler
+from pathlib import Path
 import os
 import logging
 import sys
 import re
-import subprocess
 import time
 
 # TODO: add command to save a response with /s 
 # TODO: change /lf feature to take file and generate embeddings, then store said embeddings in the database.
 # TODO: create new command to query the database or possibly a flag? maybe make it always query the database?
-# TODO: add error handling for logs to not prevent program from working when logs don't work and pass logs to all workers
 
 class Main_Interface():
-    def __init__(self,args, console):
+    def __init__(self,args,console):
                 self.args = args
                 self.console = console
-                self.convo_history = []
+                self.convo_history = [{"role":"system", "content":"You go by the name Apollo and you are a friendly helpful ai."}]
                 self.Llama = None
                 self.logger = None
-
-                try:
-                    with self.console.status("Pre-loading model...", spinner="dots") as status:
-                        self.Llama = Llama_Worker(self.console)
-
-                except KeyboardInterrupt:
-                    self.console.print("Keyboard interrupt detected, exitting application.")
-                    sys.exit(1)
-
-                except EOFError:
-                    self.console.print("\nEOF detected. Exiting...", style="yellow")
-                    self.logger.info("EOF detected, exiting application")
-                    sys.exit(1)
-
-                except Exception as e:
-                    self.console.print(f"Critical error occurred in initializing models: {e}", style="red bold")
-                    sys.exit(1)
+                os.system("clear")
 
                 try:
                     self.logger = logging.getLogger("logger")
@@ -52,13 +35,29 @@ class Main_Interface():
                 except Exception as e:
                     self.console.print(f"Warning: Failed to initialize logger: {e}", 
                              style="yellow bold")
-                    # Create a basic logger that at least doesn't crash
                     self.logger = logging.getLogger("logger")
                     self.logger.addHandler(logging.NullHandler())
 
+                try:
+                    with self.console.status("Pre-loading model...", spinner="dots") as status:
+                        self.Llama = Llama_Worker(self.console)
+                        self.Llama.preload_model()
+
+                except KeyboardInterrupt:
+                    self.console.print("Keyboard interrupt detected, exiting application.")
+                    sys.exit(0)
+
+                except EOFError:
+                    self.console.print("\nEOF detected. Exiting...")
+                    self.logger.info("EOF detected, exiting application")
+                    sys.exit(0)
+
+                except Exception as e:
+                    self.console.print(f"Critical error occurred in initializing models: {e}", style="red bold")
+                    sys.exit(1)
+
     def run(self):
         """Main Loop"""
-        os.system("clear")        
         self.console.print("""
 
           /$$$$$$  /$$$$$$$   /$$$$$$  /$$       /$$        /$$$$$$ 
@@ -127,12 +126,13 @@ class Main_Interface():
                 confirm = input("")
                 if confirm.upper() == "Y":
                     self.logger.info("quitting application")
-                    sys.exit(1)
+                    sys.exit(0)
                 elif confirm.upper() == "N":
                     break
 
                 else:
                     self.console.print("\nInvalid Input! Try Y or N!")
+
             except EOFError:
                 self.console.print("\nEOF detected. Exiting...", style="yellow")
                 self.logger.info("EOF detected, exiting application")
@@ -143,11 +143,9 @@ class Main_Interface():
                 self.logger.info("Keyboard interrupt during input")
                 sys.exit(0)
 
-
-
     def reset_command(self):
         self.logger.info("reset command was used")
-        self.convo_history = []
+        self.convo_history = [{"role":"system", "content":"You go by the name Apollo and you are a friendly helpful ai."}]
         os.system('clear')
         self.run()
 
@@ -160,43 +158,38 @@ class Main_Interface():
             return
 
         filename = match.group(1).strip()
+        home_dir = Path.home()
         try:
+            file_path = None
             with self.console.status("Locating File...", spinner="dots") as status:
-                result = subprocess.run(
-                ["find", "/", "-name", filename],
-                capture_output=True,
-                text=True,
-                check=True
-                )
+                for root, dirs, files in os.walk(home_dir):
+                    if filename in files:
+                        file_path = os.path.join(root, filename)
+                        with open(file_path, 'r', encoding='utf-8') as f:
+                            file_contents = f.read()
+            status.stop()
         except FileNotFoundError:
-            self.console.print("Failed to locate the 'find' command.", style="red bold")
-            return
-
-        except subprocess.CalledProcessError as e:
-            self.console.print(f"Command failed with exit code {e.returncode}", style="red bold")
-            self.console.print(f"Error output: {e.stderr}", style="red bold")
+            status.stop()
+            self.console.print("Error: Failed to locate the 'find' command.", style="red bold")
             return
 
         except PermissionError:
-            self.console.print("No permission to run 'find' command.",style = "red bold")
+            status.stop()
+            self.console.print("Error: No permission to run 'find' command.",style = "red bold")
+            return
+        except Exception as e:
+            status.stop()
+            self.console.print(f"Unexpected error occured: {e}", style="red bold")
             return
 
-        path = result.stdout.strip().split("\n")[0] if result.stdout.strip() else None
-        if not path:
-            self.console.print(f"File: {filename} Not found",style="red bold")
+        if not file_path:
+            self.console.print("File not found", style = "red bold")
             return
 
-        self.console.print(f"File loaded: {path}", style="red bold")
-        self.logger.info(f"Found file at: {path}")
-        with open(path,"r") as loaded_file:
-            file_contents = loaded_file.read()
-
-        embeddings = self.Llama.generate_embeddings(file_contents)
-        if not embeddings:
-            return
-
+        self.console.print(f"File loaded: {filename}", style="green bold")
+        self.logger.info(f"Found file at: {file_path}")
+        self.convo_history.append({"role": "system", "content":f"Use this document contents to inform your response: {file_contents}"})
         self.logger.info(f"file loaded: {filename}")
-        self.logger.info(f"embeddings generated: {embeddings}")
 
     def pull_model_command(self):
         self.logger.info("pull model command used")
@@ -208,7 +201,7 @@ class Main_Interface():
         model_name = match.group(1).strip()
         with self.console.status("Pulling model...", spinner="dots") as status:
             downloaded_model = self.Llama.pull_model(model_name,status)
-        if not downladed_model:
+        if not downloaded_model:
             return
 
         self.logger.info(f"Downloaded model: {downloaded_model}")
@@ -240,7 +233,6 @@ class Main_Interface():
         self.console.print(running_model)
         self.logger.info(f"Currently running model: {running_model}")
 
-
     def help_command(self):
         self.logger.info("help command was used")
         self.console.rule("HELP", style="#fcc200 bold")
@@ -248,11 +240,11 @@ class Main_Interface():
 /h: Brings up this dialog.
 /q: Asks for confirmation, then quits the application.
 /r: Resets the conversation history and clears the screen.
-/lf filename: loads a file into the conversation history.
+/lf filename: starts on the home directory, searches for a file and loads a file into the conversation history.
 /pm model_name: pulls a model from the ollama directory and downloads it.
 /sm model_name: swaps current model into different one.
 /lm: lists the current running model aka model currently in memory.
-""", style="blue")
+""", style = "blue")
         self.console.rule("", style="#fcc200 bold")
 
     def generate_response_command(self):

@@ -15,6 +15,8 @@ class Llama_Worker():
         self.model = model
         self.embedding_model = embedding_model
         self.console = console
+
+    def preload_model(self):
         try:
             payload = {
                     "model": self.model,
@@ -31,6 +33,7 @@ class Llama_Worker():
         except requests.exceptions.ConnectionError:
             self.console.print("Error: Failed to connect to Ollama server. Ensure Ollama server is online and try again.", style="red bold")
             sys.exit(1)
+
         except Timeout:
             self.console.print("Error: Connection to Ollama server timed out. Ensure Ollama server is online and try again.", 
                              style="red bold")
@@ -235,47 +238,6 @@ class Llama_Worker():
  
         except Exception as e:
             self.status.stop()
-            self.console.print(f"Error Occured:{e}", style="red bold")
-            return None
-
-
-    def generate_embeddings(self,text):
-        try:
-            payload = {
-                       "model": self.embedding_model,
-                       "input": text}
-
-            response = requests.post(self.generate_embeddings_url, json=payload, timeout=300)
-            response.raise_for_status()
-            data = response.json()
-            return data["embeddings"]
-
-        except HTTPError as e:
-
-            if e.response.status_code == 404:
-                self.console.print(f"Error: Model '{self.embedding_model}' not found in Ollama", style="red bold")
-            else:
-                self.console.print(f"Error: HTTP {e.response.status_code} - {e}", style="red bold")
-            return None
-        except KeyboardInterrupt:
-            self.console.print("\nRequest cancelled.", style="red bold")
-            return None
-
-        except requests.exceptions.ConnectionError:
-            self.console.print("Error: Failed to connect to Ollama server. Ensure Ollama server is online and try again.", style="red bold")
-            return None
-
-        except Timeout:
-            self.console.print("Error: Connection to Ollama server timed out. Ensure Ollama server is online and try again.", 
-                             style="red bold")
-            return None
-
-        except RequestException as e:
-            self.console.print(f"Error: Network error during initialization: {e}\n Restart Ollama server and try again.", 
-                             style="red bold")
-            return None
-
-        except Exception as e:
             self.console.print(f"Error Occured:{e}", style="red bold")
             return None
 
