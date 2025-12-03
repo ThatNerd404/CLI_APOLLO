@@ -1,4 +1,11 @@
 from LLAMA_Worker import Llama_Worker
+from ollama_exceptions import (
+    OllamaConnectionError, 
+    OllamaTimeoutError, 
+    OllamaHTTPError, 
+    OllamaNetworkError,
+    OllamaModelNotFoundError
+)
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
 import os
@@ -20,11 +27,13 @@ class Main_Interface():
                 self.logger = None
                 os.system("clear")
 
+                script_dir = os.path.dirname(os.path.abspath(__file__))
+                log_file = os.path.join(script_dir, 'Logs/log.log')
                 try:
                     self.logger = logging.getLogger("logger")
                     self.logger.setLevel(logging.DEBUG)
                     handler = RotatingFileHandler(
-                    "Logs/log.log", maxBytes=100000, backupCount=5, encoding="utf-8")
+                    log_file, maxBytes=100000, backupCount=5, encoding="utf-8")
                     formatter = logging.Formatter(
                     '%(asctime)s - %(levelname)s - %(message)s',"%Y-%m-%d %H:%M:%S")
                     handler.setFormatter(formatter)
@@ -51,6 +60,26 @@ class Main_Interface():
                     self.console.print("\nEOF detected. Exiting...")
                     self.logger.info("EOF detected, exiting application")
                     sys.exit(0)
+
+                except OllamaHTTPError as e:
+                    self.console.print(f"Error: HTTP {e.status_code} - {e.message}", style="red bold")
+                    sys.exit(1)
+
+                except OllamaConnectionError as e:
+                    self.console.print(f"Error: {e.message}", style="red bold")
+                    sys.exit(1)
+
+                except OllamaTimeoutError as e:
+                    self.console.print(f"Error: {e.message}", style="red bold")
+                    sys.exit(1)
+
+                except OllamaNetworkError as e:
+                    self.console.print(f"Error: {e.message}\nRestart Ollama server and try again.", style="red bold")
+                    sys.exit(1)
+
+                except OllamaModelNotFoundError as e:
+                    self.console.print(f"Error: {e.message}")
+                    sys.exit(1)
 
                 except Exception as e:
                     self.console.print(f"Critical error occurred in initializing models: {e}", style="red bold")
@@ -143,6 +172,7 @@ class Main_Interface():
                 self.logger.info("Keyboard interrupt during input")
                 sys.exit(0)
 
+
     def reset_command(self):
         self.logger.info("reset command was used")
         self.convo_history = [{"role":"system", "content":"You go by the name Apollo and you are a friendly helpful ai."}]
@@ -197,10 +227,44 @@ class Main_Interface():
         if not match:
             self.console.print("Usage: /pm model_name.", style="yellow bold")
             return
-
         model_name = match.group(1).strip()
-        with self.console.status("Pulling model...", spinner="dots") as status:
-            downloaded_model = self.Llama.pull_model(model_name,status)
+
+        try:
+            with self.console.status("Pulling model...", spinner="dots") as status:
+                downloaded_model = self.Llama.pull_model(model_name,status)
+
+        except KeyboardInterrupt:
+            self.console.print("Canceled", style="red bold")
+            return
+
+        except EOFError:
+            self.console.print("Canceled", style="red bold")
+            return
+
+        except OllamaHTTPError as e:
+            self.console.print(f"Error: HTTP {e.status_code} - {e.message}", style="red bold")
+            return
+
+        except OllamaConnectionError as e:
+            self.console.print(f"Error: {e.message}", style="red bold")
+            return
+
+        except OllamaTimeoutError as e:
+            self.console.print(f"Error: {e.message}", style="red bold")
+            return
+
+        except OllamaNetworkError as e:
+            self.console.print(f"Error: {e.message}\nRestart Ollama server and try again.", style="red bold")
+            return
+
+        except OllamaModelNotFoundError as e:
+            self.console.print(f"Error: {e.message}")
+            return
+
+        except Exception as e:
+            self.console.print(f"Unexpected error occurred: {e}", style="red bold")
+            return
+
         if not downloaded_model:
             return
 
@@ -214,17 +278,84 @@ class Main_Interface():
             return
 
         model_name = match.group(1).strip()
-        with self.console.status("Swapping model...", spinner="dots") as status:
-            swapped_model = self.Llama.swap_model(model_name,status)
+        try:
+            with self.console.status("Swapping model...", spinner="dots") as status:
+                swapped_model = self.Llama.swap_model(model_name,status)
+
+        except KeyboardInterrupt:
+            self.console.print("Canceled", style="red bold")
+            return
+
+        except EOFError:
+            self.console.print("Canceled", style="red bold")
+            return
+
+        except OllamaHTTPError as e:
+            self.console.print(f"Error: HTTP {e.status_code} - {e.message}", style="red bold")
+            return
+
+        except OllamaConnectionError as e:
+            self.console.print(f"Error: {e.message}", style="red bold")
+            return
+
+        except OllamaTimeoutError as e:
+            self.console.print(f"Error: {e.message}", style="red bold")
+            return
+
+        except OllamaNetworkError as e:
+            self.console.print(f"Error: {e.message}\nRestart Ollama server and try again.", style="red bold")
+            return
+
+        except OllamaModelNotFoundError as e:
+            self.console.print(f"Error: {e.message}")
+            return
+
+        except Exception as e:
+            self.console.print(f"Unexpected error occurred: {e}", style="red bold")
+            return
+
         if not swapped_model:
             return
         self.logger.info(f"Swapped Model: {swapped_model}")
 
     def list_model_command(self):
         self.logger.info("list model command used")
+        
+        try:
+            with self.console.status("Listing running model...", spinner="dots") as status:
+                running_model = self.Llama.list_model(status)
 
-        with self.console.status("Listing running model...", spinner="dots") as status:
-            running_model = self.Llama.list_model(status)
+        except KeyboardInterrupt:
+            self.console.print("Canceled", style="red bold")
+            return
+
+        except EOFError:
+            self.console.print("Canceled", style="red bold")
+            return
+
+        except OllamaHTTPError as e:
+            self.console.print(f"Error: HTTP {e.status_code} - {e.message}", style="red bold")
+            return
+
+        except OllamaConnectionError as e:
+            self.console.print(f"Error: {e.message}", style="red bold")
+            return
+
+        except OllamaTimeoutError as e:
+            self.console.print(f"Error: {e.message}", style="red bold")
+            return
+
+        except OllamaNetworkError as e:
+            self.console.print(f"Error: {e.message}\nRestart Ollama server and try again.", style="red bold")
+            return
+
+        except OllamaModelNotFoundError as e:
+            self.console.print(f"Error: {e.message}")
+            return
+
+        except Exception as e:
+            self.console.print(f"Unexpected error occurred: {e}", style="red bold")
+            return
 
         if not running_model:
             return
@@ -250,10 +381,51 @@ class Main_Interface():
     def generate_response_command(self):
         self.logger.info("generate response command used")
         self.convo_history.append({"role":"user","content": self.query})
-        start_time = time.perf_counter() 
+        start_time = time.perf_counter()
+        response = ""
+        response_started = False
+        try:
+            with self.console.status("Generating Response...", spinner="dots") as status:
+                for chunk in self.Llama.generate_response(self.convo_history):
+                    if not response_started:
+                        status.stop()
+                        self.console.print("Apollo: ",style="#fcc200",end="")
+                        response_started = True
 
-        with self.console.status("Generating Response...", spinner="dots") as status:
-               response = self.Llama.generate_response(self.convo_history,status)
+                    self.console.print(chunk, end="")
+                    response += chunk
+
+        except KeyboardInterrupt:
+            self.console.print("Canceled", style="red bold")
+            return
+
+        except EOFError:
+            self.console.print("Canceled", style="red bold")
+            return
+
+        except OllamaHTTPError as e:
+            self.console.print(f"Error: HTTP {e.status_code} - {e.message}", style="red bold")
+            return
+
+        except OllamaConnectionError as e:
+            self.console.print(f"Error: {e.message}", style="red bold")
+            return
+
+        except OllamaTimeoutError as e:
+            self.console.print(f"Error: {e.message}", style="red bold")
+            return
+
+        except OllamaNetworkError as e:
+            self.console.print(f"Error: {e.message}\nRestart Ollama server and try again.", style="red bold")
+            return
+
+        except OllamaModelNotFoundError as e:
+            self.console.print(f"Error: {e.message}")
+            return
+
+        except Exception as e:
+            self.console.print(f"Unexpected error occurred: {e}", style="red bold")
+            return
 
         if not response:
             return
