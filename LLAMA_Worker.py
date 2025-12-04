@@ -18,7 +18,8 @@ class Llama_Worker():
         """Initialization of LLAMA"""
         self.chat_url = "http://100.111.62.92:11434/api/chat"
         self.pull_url = "http://100.111.62.92:11434/api/pull"
-        self.list_models_url = "http://100.111.62.92:11434/api/ps"
+        self.running_model_url = "http://100.111.62.92:11434/api/ps"
+        self.list_models_url = "http://100.111.62.92:11434/api/tags"
         self.generate_embeddings_url = "http://100.111.62.92:11434/api/embed"
 
         self.model = model
@@ -91,17 +92,14 @@ class Llama_Worker():
 
         except Exception as e:
             raise
-    def pull_model(self, new_model, status):
+    def pull_model(self, new_model):
         try:
-            self.status = status
             self.new_model = new_model
             payload = {
                 "model": self.new_model}
 
             response = requests.post(self.pull_url, json=payload, timeout=30)
             response.raise_for_status()
-            self.status.stop()
-            self.console.print(f"Model: {self.new_model} loaded successfully!")
             return self.new_model
 
         except HTTPError as e:
@@ -124,10 +122,10 @@ class Llama_Worker():
 
         except Exception as e:
             raise
-    def swap_model(self, model, status):
+
+    def swap_model(self, model):
 
         self.model = model
-        self.status = status
         payload = {
                         "model": self.model,
                         "keep_alive":-1
@@ -136,9 +134,9 @@ class Llama_Worker():
         try:
             preload = requests.post(self.chat_url,json=payload, timeout=30)
             preload.raise_for_status()
-            self.status.stop()
-            self.console.print(f"Current loaded model: {self.model}")
+
             return self.model
+
         except HTTPError as e:
             if e.response.status_code == 404:
                 raise OllamaModelNotFoundError(f"Model '{self.model}' not found in Ollama")
@@ -160,15 +158,18 @@ class Llama_Worker():
         except Exception as e:
             raise
 
-    def list_model(self, status):
+    def list_model(self):
         try: 
-            self.status = status
+            response = requests.get(self.running_model_url, timeout=30)
+            response.raise_for_status()
+            data = response.json()
+            running_model = data["models"][0]["model"]
+
             response = requests.get(self.list_models_url, timeout=30)
             response.raise_for_status()
-            self.status.stop()
-            model_list = []
             data = response.json()
-            return data["models"][0]["model"]
+            stored_models = [item["name"] for item in data["models"]]
+            return running_model, stored_models
 
         except HTTPError as e:
             if e.response.status_code == 404:

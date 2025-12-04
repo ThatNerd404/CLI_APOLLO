@@ -15,8 +15,7 @@ import re
 import time
 
 # TODO: add command to save a response with /s 
-# TODO: change /lf feature to take file and generate embeddings, then store said embeddings in the database.
-# TODO: create new command to query the database or possibly a flag? maybe make it always query the database?
+# TODO: change /lf feature to take file, generate embeddings, then use those to grab out the parts of the file that matter
 
 class Main_Interface():
     def __init__(self,args,console):
@@ -29,6 +28,7 @@ class Main_Interface():
 
                 script_dir = os.path.dirname(os.path.abspath(__file__))
                 log_file = os.path.join(script_dir, 'Logs/log.log')
+
                 try:
                     self.logger = logging.getLogger("logger")
                     self.logger.setLevel(logging.DEBUG)
@@ -216,6 +216,7 @@ class Main_Interface():
             self.console.print("File not found", style = "red bold")
             return
 
+        self.console.print(f"Apollo: ", style= "yellow bold", end="")
         self.console.print(f"File loaded: {filename}", style="green bold")
         self.logger.info(f"Found file at: {file_path}")
         self.convo_history.append({"role": "system", "content":f"Use this document contents to inform your response: {file_contents}"})
@@ -231,7 +232,9 @@ class Main_Interface():
 
         try:
             with self.console.status("Pulling model...", spinner="dots") as status:
-                downloaded_model = self.Llama.pull_model(model_name,status)
+                downloaded_model = self.Llama.pull_model(model_name)
+            status.stop()
+            self.console.print(f"Apollo: {downloaded_model} downloaded successfully!")
 
         except KeyboardInterrupt:
             self.console.print("Canceled", style="red bold")
@@ -280,7 +283,9 @@ class Main_Interface():
         model_name = match.group(1).strip()
         try:
             with self.console.status("Swapping model...", spinner="dots") as status:
-                swapped_model = self.Llama.swap_model(model_name,status)
+                swapped_model = self.Llama.swap_model(model_name)
+            status.stop()
+            self.console.print(f"Swapped to model: {swapped_model}")
 
         except KeyboardInterrupt:
             self.console.print("Canceled", style="red bold")
@@ -320,10 +325,14 @@ class Main_Interface():
 
     def list_model_command(self):
         self.logger.info("list model command used")
-        
+
         try:
-            with self.console.status("Listing running model...", spinner="dots") as status:
-                running_model = self.Llama.list_model(status)
+            with self.console.status("Listing models...", spinner="dots") as status:
+                running_model, stored_models = self.Llama.list_model()
+            self.console.print(f"Apollo:",style="yellow bold")
+            self.console.print(f"Currently running model: {running_model}")
+            self.console.print("Installed models:")
+            self.console.print("\n".join(stored_models))
 
         except KeyboardInterrupt:
             self.console.print("Canceled", style="red bold")
@@ -357,12 +366,11 @@ class Main_Interface():
             self.console.print(f"Unexpected error occurred: {e}", style="red bold")
             return
 
-        if not running_model:
+        if not running_model or not stored_models:
             return
 
-        self.console.print("Currently running model:")
-        self.console.print(running_model)
         self.logger.info(f"Currently running model: {running_model}")
+        self.logger.info(f"Loaded Models: {stored_models}")
 
     def help_command(self):
         self.logger.info("help command was used")
@@ -374,8 +382,9 @@ class Main_Interface():
 /lf filename: starts on the home directory, searches for a file and loads a file into the conversation history.
 /pm model_name: pulls a model from the ollama directory and downloads it.
 /sm model_name: swaps current model into different one.
-/lm: lists the current running model aka model currently in memory.
+/lm: lists the current running model aka model currently in memory and then lists the models installed.
 """, style = "blue")
+
         self.console.rule("", style="#fcc200 bold")
 
     def generate_response_command(self):
