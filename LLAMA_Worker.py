@@ -10,7 +10,6 @@ from ollama_exceptions import (
     OllamaNetworkError,
     OllamaModelNotFoundError
 )
-# TODO: Make this file not need to use console at all. remember the yield word
 
 
 class Llama_Worker():
@@ -58,10 +57,9 @@ class Llama_Worker():
 
     def generate_response(self,messages):
         try:
-            self.messages = messages
             payload = {
                 "model":self.model,
-                "messages":self.messages,
+                "messages": messages,
                 "keep_alive": -1,
                 "stream":True}
 
@@ -104,7 +102,7 @@ class Llama_Worker():
 
         except HTTPError as e:
             if e.response.status_code == 404:
-                raise OllamaModelNotFoundError(f"Model '{self.model}' not found in Ollama")
+                raise OllamaModelNotFoundError(f"Model '{self.new_model}' not found in Ollama")
             else:
                 raise OllamaHTTPError(e.response.status_code, str(e))
 
@@ -124,14 +122,13 @@ class Llama_Worker():
             raise
 
     def swap_model(self, model):
-
-        self.model = model
-        payload = {
+        try:
+            self.model = model
+            payload = {
                         "model": self.model,
                         "keep_alive":-1
             }
 
-        try:
             preload = requests.post(self.chat_url,json=payload, timeout=30)
             preload.raise_for_status()
 
@@ -192,4 +189,36 @@ class Llama_Worker():
         except Exception as e:
             raise
 
+    def generate_embeddings(self, input_text):
+        try:
+            payload = {
+                "model": self.embedding_model,
+                "input": input_text
+            }
+            response = requests.post(self.embedding_url, json=payload, timeout=30)
+            response.raise_for_status()
+            data = response.json()
+            embeddings = data["embeddings"]
+            return embeddings
+
+        except HTTPError as e:
+            if e.response.status_code == 404:
+                raise OllamaModelNotFoundError(f"Model '{self.embedding_model}' not found in Ollama")
+            else:
+                raise OllamaHTTPError(e.response.status_code, str(e))
+
+        except ConnectionError:
+            raise OllamaConnectionError("Failed to connect to Ollama server. Ensure Ollama server is online and try again.")
+
+        except Timeout:
+            raise OllamaTimeoutError("Connection to Ollama server timed out. Ensure Ollama server is online and try again.")
+
+        except KeyboardInterrupt:
+            raise
+
+        except RequestException as e:
+            raise OllamaNetworkError(f"Network error occurred: {e}")
+
+        except Exception as e:
+            raise
 

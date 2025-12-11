@@ -14,7 +14,8 @@ import sys
 import re
 import time
 
-# TODO: add command to save a response with /s 
+# TODO: add command to save a conversation with /sc
+# TODO: add command to load a conversation file with /lc
 # TODO: change /lf feature to take file, generate embeddings, then use those to grab out the parts of the file that matter
 
 class Main_Interface():
@@ -28,6 +29,8 @@ class Main_Interface():
 
                 script_dir = os.path.dirname(os.path.abspath(__file__))
                 log_file = os.path.join(script_dir, 'Logs/log.log')
+                if not os.path.exists(log_file):
+                    open(log_file, "w").close()
 
                 try:
                     self.logger = logging.getLogger("logger")
@@ -216,7 +219,8 @@ class Main_Interface():
             self.console.print("File not found", style = "red bold")
             return
 
-        self.console.print(f"Apollo: ", style= "yellow bold", end="")
+        self.console.print(f"Apollo: ", style= "yellow", end="")
+        
         self.console.print(f"File loaded: {filename}", style="green bold")
         self.logger.info(f"Found file at: {file_path}")
         self.convo_history.append({"role": "system", "content":f"Use this document contents to inform your response: {file_contents}"})
