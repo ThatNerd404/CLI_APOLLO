@@ -3,7 +3,7 @@ import requests
 import json
 import sys
 from requests.exceptions import Timeout, HTTPError, RequestException
-from ollama_exceptions import (
+from custom_exceptions import (
     OllamaConnectionError, 
     OllamaTimeoutError, 
     OllamaHTTPError, 
@@ -13,7 +13,7 @@ from ollama_exceptions import (
 
 
 class Llama_Worker():
-    def __init__(self,console, model="mistral:7b", embedding_model="embeddinggemma"):
+    def __init__(self, model="mistral:7b", embedding_model="embeddinggemma"):
         """Initialization of LLAMA"""
         self.chat_url = "http://100.111.62.92:11434/api/chat"
         self.pull_url = "http://100.111.62.92:11434/api/pull"
@@ -23,7 +23,6 @@ class Llama_Worker():
 
         self.model = model
         self.embedding_model = embedding_model
-        self.console = console
 
     def preload_model(self):
         try:
@@ -222,3 +221,8 @@ class Llama_Worker():
         except Exception as e:
             raise
 
+if __name__ == "__main__":
+    llama = Llama_Worker()
+    llama.preload_model()
+    for chunk in llama.generate_response(messages=[{"role":"user", "content":"why is the sky blue?"}]):
+        print(chunk, end="")

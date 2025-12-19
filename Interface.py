@@ -1,5 +1,6 @@
 from LLAMA_Worker import Llama_Worker
-from ollama_exceptions import (
+from MYSQL_DB_Worker import MySql_Worker
+from custom_exceptions import (
     OllamaConnectionError, 
     OllamaTimeoutError, 
     OllamaHTTPError, 
@@ -13,10 +14,10 @@ import logging
 import sys
 import re
 import time
+import json
 
-# TODO: add command to save a conversation with /sc
-# TODO: add command to load a conversation file with /lc
-# TODO: change /lf feature to take file, generate embeddings, then use those to grab out the parts of the file that matter
+# TODO: add command to save a conversation with /sc to mysql database and then ask if they want a copy to the a json file
+# TODO: add command to load a conversation file with /lc from mysql database or from a json file
 
 class Main_Interface():
     def __init__(self,args,console):
@@ -24,6 +25,7 @@ class Main_Interface():
                 self.console = console
                 self.convo_history = [{"role":"system", "content":"You go by the name Apollo and you are a friendly helpful ai."}]
                 self.Llama = None
+                self.MySQL = None
                 self.logger = None
                 os.system("clear")
 
@@ -52,7 +54,7 @@ class Main_Interface():
 
                 try:
                     with self.console.status("Pre-loading model...", spinner="dots") as status:
-                        self.Llama = Llama_Worker(self.console)
+                        self.Llama = Llama_Worker()
                         self.Llama.preload_model()
 
                 except KeyboardInterrupt:
@@ -87,6 +89,7 @@ class Main_Interface():
                 except Exception as e:
                     self.console.print(f"Critical error occurred in initializing models: {e}", style="red bold")
                     sys.exit(1)
+
 
     def run(self):
         """Main Loop"""
@@ -142,12 +145,17 @@ class Main_Interface():
              elif self.query == "/lm":
                 self.list_model_command()
 
+             elif self.query == "/sc":
+                self.save_conversation_command()
+
+             elif self.query == "/lc":
+                self.load_conversation_command()
+
              elif self.query == "/h":
                 self.help_command()
 
              else:
                 self.generate_response_command()
-
 
     def quit_command(self):
         self.logger.info("quit command has been used")
@@ -203,13 +211,14 @@ class Main_Interface():
             status.stop()
         except FileNotFoundError:
             status.stop()
-            self.console.print("Error: Failed to locate the 'find' command.", style="red bold")
+            self.console.print(f"Error: Failed to locate file: {filename}", style="red bold")
             return
 
         except PermissionError:
             status.stop()
-            self.console.print("Error: No permission to run 'find' command.",style = "red bold")
+            self.console.print(f"Error: No permission to read file: {filename}",style = "red bold")
             return
+
         except Exception as e:
             status.stop()
             self.console.print(f"Unexpected error occured: {e}", style="red bold")
@@ -220,7 +229,7 @@ class Main_Interface():
             return
 
         self.console.print(f"Apollo: ", style= "yellow", end="")
-        
+
         self.console.print(f"File loaded: {filename}", style="green bold")
         self.logger.info(f"Found file at: {file_path}")
         self.convo_history.append({"role": "system", "content":f"Use this document contents to inform your response: {file_contents}"})
@@ -376,6 +385,19 @@ class Main_Interface():
         self.logger.info(f"Currently running model: {running_model}")
         self.logger.info(f"Loaded Models: {stored_models}")
 
+    def save_conversation_command(self):
+        # this command will have to turn the convo history dict into json object then store that object in a table
+        self.logger.info("save conversation command was used")
+        try:
+            self.MySQL = MySql_Worker(host="100.111.62.92", user="root", password = "Secret_PW", port =8000, database="Conversation_Storage")
+        # use NOW() function in sql command to grab timestamp value
+        except Exception as e:
+            self.console.print(f"Critical error occurred in connecting to database")
+            return
+
+    def load_conversation_command(self):
+        pass
+
     def help_command(self):
         self.logger.info("help command was used")
         self.console.rule("HELP", style="#fcc200 bold")
@@ -387,6 +409,8 @@ class Main_Interface():
 /pm model_name: pulls a model from the ollama directory and downloads it.
 /sm model_name: swaps current model into different one.
 /lm: lists the current running model aka model currently in memory and then lists the models installed.
+/sc: saves a conversation to the mysql database and ask if a copy should also be saved to a txt file.
+/lc: loads a conversation from either the mysql database or from a txt file.
 """, style = "blue")
 
         self.console.rule("", style="#fcc200 bold")
