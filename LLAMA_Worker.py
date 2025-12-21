@@ -60,6 +60,8 @@ class Llama_Worker():
                 "model":self.model,
                 "messages": messages,
                 "keep_alive": -1,
+                "options": {
+                    "stop": ["british", "British", "Britian", "britian", "UK", "uk", "United Kingdom"]},
                 "stream":True}
 
             response = requests.post(self.chat_url, json=payload, stream=True, timeout=30)
