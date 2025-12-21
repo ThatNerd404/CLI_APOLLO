@@ -1,11 +1,11 @@
 import json
 import mysql.connector
+from datetime import datetime
 from mysql.connector import errorcode
 
-# TODO: create table with conversation id or name, the conversation, the timestamp of when it was saved and other metadata like length, model used,etc
 # TODO: add basic error handling to worker
 # TODO: go over notes on SQL
-
+# TODO: to fix everything you fucked over by being lazy remove the execute comamand function and make a function for whatever we want to do you ijiot!
 class MySql_Worker():
     def __init__(self, host, user, password, port, database):
         self.mydb = mysql.connector.connect(
@@ -26,26 +26,48 @@ class MySql_Worker():
                 Timestamp TIMESTAMP NOT NULL,
                 PRIMARY KEY (Conversation_ID)
                 );""")
-            print("new tables created bitch!")
 
-    def Execute_Command(self, command):
-
+    def Insert_Conversation(self, conversation, model):
+        now = datetime.now()
+        timestamp_str = str(now.strftime("%Y-%m-%d %H:%M:%S"))
         try:
-
-            self.cursor.execute(command)
-            result = self.cursor.fetchall()
-            return result
+            self.cursor.execute("INSERT INTO Conversations (Conversation, Model, Timestamp) VALUES (%s, %s, %s)", [json.dumps(conversation), model, timestamp_str])
+            self.mydb.commit()
 
         except mysql.connector.Error as e:
-            print(f"bro we ran into an error {e}\n Error number: {e.errno}")
+            raise Exception(f"bro we ran into an error {e}\n Error number: {e.errno}")
 
-        except Exeception as e:
+        except Exception as e:
             raise Exception(f"Unexpected error occured: {e}")
+
+    def Show_Table_Info(self):
+        try:
+            self.cursor.execute("SHOW TABLES")
+            tables = self.cursor.fetchall()
+            self.cursor.execute("SELECT * FROM Conversations")
+            conversation_data = self.cursor.fetchall()
+            return tables, conversation_data
+
+        except mysql.connector.Error as e:
+            raise Exception(f"bro we ran into an error {e}\n Error number: {e.errno}")
+
+        except Exception as e:
+            raise Exception(f"Unexpected error occured: {e}")
+
+    def Clear_Table(self):
+        self.cursor.execute("TRUNCATE TABLE Conversations")
+        self.mydb.commit()
+    def Query_Table(self):
+        pass
 
     def Close_Database(self):
         self.mydb.close()
 
 if __name__ == "__main__":
     msw = MySql_Worker(host="100.111.62.92", user="root", password = "Secret_PW", port =8000, database="Conversation_Storage")
-    print(msw.Execute_Command("SHOW TABLES"))
-    print(msw.Execute_Command("DESCRIBE Conversations"))
+    #msw.Clear_Table()
+    print(msw.Show_Table_Info())
+    now = datetime.now()
+    timestamp_str = now.strftime("%Y-%m-%d %H:%M:%S")
+    print(timestamp_str)
+

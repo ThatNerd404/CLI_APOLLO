@@ -388,9 +388,15 @@ class Main_Interface():
     def save_conversation_command(self):
         # this command will have to turn the convo history dict into json object then store that object in a table
         self.logger.info("save conversation command was used")
+
         try:
-            self.MySQL = MySql_Worker(host="100.111.62.92", user="root", password = "Secret_PW", port =8000, database="Conversation_Storage")
-        # use NOW() function in sql command to grab timestamp value
+            with self.console.status("Saving Conversation...", spinner="dots") as status:
+                MySQL = MySql_Worker(host="100.111.62.92", user="root", password = "Secret_PW", port =8000, database="Conversation_Storage")
+                running_model, stored_models = self.Llama.list_model()
+                MySQL.Insert_Conversation(self.convo_history, running_model)
+
+            self.console.print("Successfully saved conversation to database.", style="green bold")
+
         except Exception as e:
             self.console.print(f"Critical error occurred in connecting to database")
             return
