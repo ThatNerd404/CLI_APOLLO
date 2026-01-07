@@ -2,6 +2,7 @@ from Interface import Main_Interface
 import sys
 import argparse
 from rich.console import Console
+# nonsense comment
 def main():
     parser = argparse.ArgumentParser()
     args = parser.parse_args()
