@@ -44,9 +44,11 @@ class MySql_Worker():
         try:
             self.cursor.execute("SHOW TABLES")
             tables = self.cursor.fetchall()
+            self.cursor.execute("SELECT column_name FROM information_schema.columns WHERE table_name = 'Conversations'")
+            columns = self.cursor.fetchall()
             self.cursor.execute("SELECT * FROM Conversations")
             conversation_data = self.cursor.fetchall()
-            return tables, conversation_data
+            return tables, columns, conversation_data
 
         except mysql.connector.Error as e:
             raise Exception(f"bro we ran into an error {e}\n Error number: {e.errno}")
@@ -58,7 +60,15 @@ class MySql_Worker():
         self.cursor.execute("TRUNCATE TABLE Conversations")
         self.mydb.commit()
     def Query_Table(self):
-        pass
+        try:
+            pass
+
+        except mysql.connector.Error as e:
+            raise Exception(f"bro we ran into an error {e}\n Error number: {e.errno}")
+
+        except Exception as e:
+            raise Exception(f"Unexpected error occured: {e}")
+
 
     def Close_Database(self):
         self.mydb.close()
@@ -66,7 +76,11 @@ class MySql_Worker():
 if __name__ == "__main__":
     msw = MySql_Worker(host="100.111.62.92", user="root", password = "Secret_PW", port =8000, database="Conversation_Storage")
     #msw.Clear_Table()
-    print(msw.Show_Table_Info())
+    table_info = msw.Show_Table_Info()
+    print(table_info[0])
+    print(table_info[1])
+    print(table_info[2])
+
     now = datetime.now()
     timestamp_str = now.strftime("%Y-%m-%d %H:%M:%S")
     print(timestamp_str)
