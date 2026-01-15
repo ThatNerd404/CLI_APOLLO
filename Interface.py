@@ -229,7 +229,7 @@ class Main_Interface():
             self.console.print("File not found", style = "red bold")
             return
 
-        self.console.print(f"Apollo: ", style= "yellow", end="")
+        self.console.print(f"\nApollo: ", style= "yellow", end="")
 
         self.console.print(f"File loaded: {filename}", style="green bold")
         self.logger.info(f"Found file at: {file_path}")
@@ -248,7 +248,7 @@ class Main_Interface():
             with self.console.status("Pulling model...", spinner="dots") as status:
                 downloaded_model = self.Llama.pull_model(model_name)
             status.stop()
-            self.console.print(f"Apollo: {downloaded_model} downloaded successfully!")
+            self.console.print(f"\nApollo: {downloaded_model} downloaded successfully!")
 
         except KeyboardInterrupt:
             self.console.print("Canceled", style="red bold")
@@ -343,7 +343,7 @@ class Main_Interface():
         try:
             with self.console.status("Listing models...", spinner="dots") as status:
                 running_model, stored_models = self.Llama.list_model()
-            self.console.print(f"Apollo:",style="yellow bold")
+            self.console.print(f"\nApollo:",style="yellow bold")
             self.console.print(f"Currently running model: {running_model}")
             self.console.print("Installed models:")
             self.console.print("\n".join(stored_models))
@@ -403,8 +403,8 @@ class Main_Interface():
             return
 
     def load_conversation_command(self):
-        pass
-
+        self.logger.info("load conversation command was used")
+        
     def help_command(self):
         self.logger.info("help command was used")
         self.console.rule("HELP", style="#fcc200 bold")
@@ -433,12 +433,12 @@ class Main_Interface():
                 for chunk in self.Llama.generate_response(self.convo_history):
                     if not response_started:
                         status.stop()
-                        self.console.print("Apollo: ",style="#fcc200",end="")
+                        self.console.print("\nApollo: ",style="#fcc200",end="")
                         response_started = True
 
                     self.console.print(chunk, end="")
                     response += chunk
-
+            self.console.print("\n")
         except KeyboardInterrupt:
             self.console.print("Canceled", style="red bold")
             return

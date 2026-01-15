@@ -40,6 +40,8 @@ class MySql_Worker():
         except Exception as e:
             raise Exception(f"Unexpected error occured: {e}")
 
+    def Grab_Conversation(self):
+        pass
     def Show_Table_Info(self):
         try:
             self.cursor.execute("SHOW TABLES")
